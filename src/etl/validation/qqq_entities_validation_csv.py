@@ -14,14 +14,18 @@ class validation:
         pass
 
     def validate_raw_csv_files_exist(self):
+        
         logger.info("Start validating raw CSV file exists") 
 
-        raw_csv_files = raw_csv_file_list() # uruchamia zebranie listy nazw plikow
-        present_files = {normalize_filename(f) for f in raw_csv_files} # uruchamia normalizacje nazw plikow na zebranej liscie zmienia na zbior (set)
+        raw_files = raw_csv_file_list()
+        for f in raw_files:
+            normalize_filename(f)
+
+        normalized_csv_files = set(raw_csv_file_list()) # uruchamia zebranie nazw pliku do zbioru (set)
         config = load_config() # urchamia skrypt otierajacy plik yaml
         required_files = set(config["required_files"]) # zbiera z pliku yaml liste wymaganych plikow do zbioru (set)
 
-        missing_files = required_files - present_files # odejmuje wartosci z dwoch list
+        missing_files = required_files - normalized_csv_files # odejmuje wartosci z dwoch list
 
         if missing_files: # 
             raise Exception(f"Missing required files: {missing_files}") # jezeli jakas nazwa zostanie znaleziona to wyrzuca blad z nazwa pliku
