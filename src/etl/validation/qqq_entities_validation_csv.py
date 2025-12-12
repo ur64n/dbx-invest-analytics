@@ -10,29 +10,29 @@ from src.config.logger import get_logger
 logger = get_logger("validation")
 
 class validation:
-    def __init__(self):
-        pass
+    def __init__(self, config: dict):
+        self.config = config
+        self.logger = get_logger("validation")
 
     def validate_raw_csv_files_exist(self):
         
-        logger.info("Start validating raw CSV file exists") 
+        self.logger.info("Start validating raw CSV file exists")
 
-        raw_files = raw_csv_file_list()
-        for f in raw_files:
+        for f in raw_csv_file_list():
             normalize_filename(f)
 
         normalized_csv_files = set(raw_csv_file_list()) # uruchamia zebranie nazw pliku do zbioru (set)
-        config = load_config() # urchamia skrypt otierajacy plik yaml
-        required_files = set(config["required_files"]) # zbiera z pliku yaml liste wymaganych plikow do zbioru (set)
+        required_files = set(self.config["required_files"]) # uruchamia config_loader odczytujacy plik yaml i zbiera z z niego liste wymaganych plikow i przeksztalca zbioru (set)
 
         missing_files = required_files - normalized_csv_files # odejmuje wartosci z dwoch list
 
-        if missing_files: # 
+        if missing_files: # Zwraca wartosc bool 
             raise Exception(f"Missing required files: {missing_files}") # jezeli jakas nazwa zostanie znaleziona to wyrzuca blad z nazwa pliku
 
         logger.info("All required files exist")
 
 if __name__ == "__main__":
 
-    run = validation()
+    config = load_config()
+    run = validation(config)
     run.validate_raw_csv_files_exist()
