@@ -1,6 +1,6 @@
 import os
 import re
-from src.config.config import raw_csv_files_path
+from src.config.config import raw_csv_files_path, raw_qqq_delta_file_path
 from src.config.logger import get_logger
 
 logger = get_logger("validation_helper")
@@ -26,7 +26,3 @@ def normalize_filename(filename:str) -> str:
     logger.info(f"qqq_etf_entities filename normalization finished, new filename: {new_name}")
 
     return new_name
-
-# if __name__ == "__main__":
-#     new_name = normalize_filename(raw_csv_file_name)
-#     print(new_name)
