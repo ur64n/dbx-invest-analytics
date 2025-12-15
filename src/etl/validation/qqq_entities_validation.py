@@ -37,8 +37,6 @@ class validation:
         except AnalysisException:
             raise Exception(f"Delta table {table_name} does not exist")
 
-#TODO: Zdefiniowac nowa funkcje walidacji sprawdzenia obecnosci pliku delta w Unity Catalog.
-
 if __name__ == "__main__":
 
     config = load_config()

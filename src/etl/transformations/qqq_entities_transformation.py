@@ -1,5 +1,6 @@
 import pandas as pd
 import os
+import yfinance as yf
 from src.config.config import raw_csv_files_path, qqq_entities_filename, raw_qqq_delta_file_path, qqq_delta_file_name
 from src.config.logger import get_logger
 from src.etl.validation.qqq_entities_validation import validation
@@ -29,6 +30,13 @@ class transformation:
         self.validator.validate_delta_table_exist(self.spark, qqq_delta_file_name)
 
         return df
+    
+    def qqq_entities_categorisation(self):
+        
+        self.logger.info("Starting qqq_entities categorisation with yfinance")
+
+        
+   
 
 if __name__ == "__main__":
 
