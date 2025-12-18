@@ -7,12 +7,12 @@ from src.config.logger import get_logger
 from pyspark.sql.utils import AnalysisException
 from src.config.config import raw_qqq_delta_file_path
 
-logger = get_logger("validation")
+# Przenosze logger do main z lini 10 i definiuje przekazanie z maina do konstruktora klasy i atrybutow
 
 class validation:
-    def __init__(self, config: dict):
+    def __init__(self, config: dict, logger):
         self.config = config
-        self.logger = get_logger("validation")
+        self.logger = logger
 
     def validate_raw_csv_files_exist(self):
         
@@ -29,7 +29,7 @@ class validation:
         if missing_files: # Zwraca wartosc bool 
             raise Exception(f"Missing required files: {missing_files}") # jezeli jakas nazwa zostanie znaleziona to wyrzuca blad z nazwa pliku
 
-        logger.info("All required files exist")
+        self.logger.info("All required files exist")
 
     def validate_delta_table_exist(self, spark, table_name: str):
         try:
@@ -40,6 +40,7 @@ class validation:
 if __name__ == "__main__":
 
     config = load_config()
-    run = validation(config)
+    logger = get_logger("validation")
+    run = validation(config, logger)
     run.validate_raw_csv_files_exist()
     

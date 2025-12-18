@@ -1,3 +1,4 @@
 yfinance
 lxml
 html5lib
+yfinance
