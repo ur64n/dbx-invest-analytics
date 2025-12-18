@@ -2,21 +2,22 @@ from src.config.logger import get_logger
 from src.config.config import qqq_delta_file_name, qqq_enriched_delta_file_name
 from pyspark.sql.types import StructType, StructField, StringType
 from pyspark.sql import DataFrame
-import yfinance as yf
+import yfinance as yf # importy jak narazie bez zmian
 
-logger = get_logger("transformation_helper")
+logger = get_logger("enrichment") # zmiana nazwy loggera
 
-class TransformationHelper:
+class enrichment:
 
-    def __init__(self, logger, spark):
+    def __init__(self, logger, spark, df): # dodanie spark oraz logger do main
         self.logger = logger
         self.spark = spark
+        self.df = df
 
-    def extract_tickers(self, df) -> list[str]:
+    def extract_tickers(self) -> list[str]: # przekazanie tabeli surowej tabeli delta z main jako df
 
         logger.info(f"Start building list of tickers from{qqq_delta_file_name}")
 
-        tickers = [r.Symbol for r in df.select("Symbol").distinct().collect()]
+        tickers = [r.Symbol for r in self.df.select("Symbol").distinct().collect()]
     
         logger.info(f"Building list of tickers from {qqq_delta_file_name} file, finished")
 
@@ -49,11 +50,11 @@ class TransformationHelper:
 
         return meta_df
 
-    def enrich(self, df, meta_df) -> DataFrame:
+    def enrich(self, meta_df) -> DataFrame:
 
         logger.info(f"Start combining qqq_entities_file with enriched dataframe by categories and industries")
 
-        result_df = df.join(meta_df, on="symbol", how="left")
+        result_df = self.df.join(meta_df, on="symbol", how="left")
 
         logger.info(f"Combining qqq_entities_file with enriched dataframe by categories and industries, finished")
 
@@ -67,4 +68,11 @@ class TransformationHelper:
 
         logger.info(f"Saving enriched dataframe to delta, finished")
 
+if __name__ == "__main__":
 
+    df = spark.table(qqq_delta_file_name) # zmienna df przechowuje dataframe z tabele delta
+    enr = enrichment(logger, spark, df)
+    tickers = enr.extract_tickers()
+    meta_df = enr.fetch_metadata(tickers)
+    result_df = enr.enrich(meta_df)
+    enr.save_to_delta(result_df)
