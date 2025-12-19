@@ -39,7 +39,7 @@ class validation:
 
     def validate_enrichment_cols(self, df: DataFrame, meta_df: DataFrame) -> None:
         
-        logger.info("Start validating required columns exist")
+        logger.info(f"Start validating required columns exist in base and meta df")
 
         required_base_col = {"Symbol"}
         missing_base_col = required_base_col - set(df.columns)
@@ -51,7 +51,27 @@ class validation:
         if missing_meta_cols:
             raise ValueError(f"Missing required column {missing_meta_cols}")
 
-        logger.info("All required columns in base_df and meta_df exists")
+        logger.info("All required columns in base and meta df exists")
+
+    def validate_metadata_consistency(self, tickers: list[str], meta_df: DataFrame) -> None:
+        
+        logger.warning(f"Start validating metadata consistency")
+
+        total_tickers = len(tickers)
+
+        not_null_sector = meta_df.filter(meta_df.sector.isNotNull()).count()
+        not_null_industry = meta_df.filter(meta_df.industry.isNotNull()).count()
+
+        difference_sector = total_tickers - not_null_sector
+        difference_industry = total_tickers - not_null_industry
+        
+        logger.warning(f"Missing sector values: {difference_sector}, missing industry values: {difference_industry}")
+
+        missing_sector_tickers = [row["symbol"] for row in meta_df.filter(meta_df.sector.isNull()).select("symbol").collect()]
+
+
+        logger.warning(f"Missing sector values for tickers: {missing_sector_tickers}")
+        
 
 if __name__ == "__main__":
 
