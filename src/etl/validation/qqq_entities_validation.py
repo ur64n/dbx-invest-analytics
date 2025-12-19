@@ -6,6 +6,7 @@ from src.config.config_loader import load_config
 from src.config.logger import get_logger
 from pyspark.sql.utils import AnalysisException
 from src.config.config import raw_qqq_delta_file_path
+from pyspark.sql import DataFrame
 
 logger = get_logger("validation")
 
@@ -35,6 +36,22 @@ class validation:
             spark.table(table_name)
         except AnalysisException:
             raise Exception(f"Delta table {table_name} does not exist")
+
+    def validate_enrichment_cols(self, df: DataFrame, meta_df: DataFrame) -> None:
+        
+        logger.info("Start validating required columns exist")
+
+        required_base_col = {"Symbol"}
+        missing_base_col = required_base_col - set(df.columns)
+        if missing_base_col:
+            raise ValueError(f"Missing required column {missing_base_col}")
+
+        required_meta_cols = {"symbol", "sector", "industry"}
+        missing_meta_cols = required_meta_cols - set(meta_df.columns)
+        if missing_meta_cols:
+            raise ValueError(f"Missing required column {missing_meta_cols}")
+
+        logger.info("All required columns in base_df and meta_df exists")
 
 if __name__ == "__main__":
 

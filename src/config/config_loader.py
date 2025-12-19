@@ -1,5 +1,5 @@
 import yaml
-from config import settings_path
+from .config import settings_path
 
 # Otwiera plik yaml
 def load_config():

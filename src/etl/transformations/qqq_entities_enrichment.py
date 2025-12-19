@@ -1,19 +1,22 @@
 from src.config.logger import get_logger
 from src.config.config import qqq_delta_file_name, qqq_enriched_delta_file_name
+from src.config.config_loader import load_config
 from pyspark.sql.types import StructType, StructField, StringType
 from pyspark.sql import DataFrame
-import yfinance as yf # importy jak narazie bez zmian
+import yfinance as yf
+from src.etl.validation.qqq_entities_validation import validation
 
-logger = get_logger("enrichment") # zmiana nazwy loggera
+logger = get_logger("enrichment")
 
 class enrichment:
 
-    def __init__(self, logger, spark, df): # dodanie spark oraz logger do main
+    def __init__(self, logger, spark, df):
         self.logger = logger
         self.spark = spark
         self.df = df
+        self.validator = validation(load_config(), self.logger)
 
-    def extract_tickers(self) -> list[str]: # przekazanie tabeli surowej tabeli delta z main jako df
+    def extract_tickers(self) -> list[str]:
 
         logger.info(f"Start building list of tickers from{qqq_delta_file_name}")
 
@@ -24,6 +27,9 @@ class enrichment:
         return tickers
 
     def fetch_metadata(self, tickers: list[str]) -> DataFrame:
+
+        if not tickers:
+            raise ValueError("Empty tickers list")
 
         logger.info(f"Start fetching categories for {len(tickers)} tickers")
 
@@ -52,6 +58,8 @@ class enrichment:
 
     def enrich(self, meta_df) -> DataFrame:
 
+        self.validator.validate_enrichment_cols(self.df, meta_df)
+
         logger.info(f"Start combining qqq_entities_file with enriched dataframe by categories and industries")
 
         result_df = self.df.join(meta_df, on="symbol", how="left")
@@ -70,7 +78,7 @@ class enrichment:
 
 if __name__ == "__main__":
 
-    df = spark.table(qqq_delta_file_name) # zmienna df przechowuje dataframe z tabele delta
+    df = spark.table(qqq_delta_file_name)
     enr = enrichment(logger, spark, df)
     tickers = enr.extract_tickers()
     meta_df = enr.fetch_metadata(tickers)
