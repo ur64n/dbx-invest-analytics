@@ -18,7 +18,7 @@ class enrichment:
 
     def extract_tickers(self) -> list[str]:
 
-        logger.info(f"Start building list of tickers from{qqq_delta_file_name}")
+        logger.info(f"Start building list of tickers from {qqq_delta_file_name}")
 
         tickers = [r.Symbol for r in self.df.select("Symbol").distinct().collect()]
     
@@ -31,7 +31,7 @@ class enrichment:
         if not tickers:
             raise ValueError("Empty tickers list")
 
-        logger.info(f"Start fetching categories for {len(tickers)} tickers")
+        logger.info(f"Start fetching categories from yfinance for {len(tickers)} tickers")
 
         rows = []
         for symbol in tickers:
@@ -43,7 +43,7 @@ class enrichment:
 
         logger.info(f"Fetching categories for {len(tickers)} tickers, finished")
 
-        logger.info(f"Start creating enriched dataframe by categories and industries")
+        logger.info(f"Start creating enriched dataframe with categories and industries")
         
         schema = StructType([
             StructField("symbol", StringType(), True),
@@ -51,8 +51,10 @@ class enrichment:
             StructField("industry", StringType(), True),
         ])
         meta_df = self.spark.createDataFrame(rows, schema)
+
+        self.validator.validate_metadata_consistency(tickers, meta_df)
         
-        logger.info(f"Creating dataframe by categories and industries, finished")
+        logger.info(f"Creating dataframe with categories and industries, finished")
 
         return meta_df
 

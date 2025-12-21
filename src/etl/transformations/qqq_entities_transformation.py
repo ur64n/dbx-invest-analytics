@@ -9,6 +9,8 @@ from src.config.logger import get_logger
 from src.etl.validation.qqq_entities_validation import validation
 from src.config.config_loader import load_config
 
+#TODO: Usunac z pliku enriched wszystkie spolki, ktore nie sa technologiczne, utworzyc modul czyszczenia danych.
+
 logger = get_logger("transformation")
 
 class transformation:

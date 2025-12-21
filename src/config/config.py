@@ -5,5 +5,6 @@ raw_qqq_delta_file_path = "workspace.bronze.qqq_etf_constituents"
 qqq_entities_filename = "qqq-etf-constituents.csv"
 qqq_delta_file_name = "bronze.qqq_etf_constituents"
 qqq_enriched_delta_file_name = "bronze.qqq_etf_entities_enriched"
+qqq_silver_path = "silver.qqq_silver_entities"
 
 #TODO: Poprawic nazwy zmiennych
