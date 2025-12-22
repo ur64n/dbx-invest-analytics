@@ -9,24 +9,24 @@ from src.config.logger import get_logger
 from src.etl.validation.qqq_entities_validation import validation
 from src.config.config_loader import load_config
 
-#TODO: Usunac z pliku enriched wszystkie spolki, ktore nie sa technologiczne, utworzyc modul czyszczenia danych.
-
 logger = get_logger("transformation")
 
 class transformation:
 
-    def __init__(self, spark, spark_df):
+    def __init__(self, spark):
         self.spark = spark
         self.spark_df = spark_df
-        self.validator = validation(load_config(), logger)
+        self.validator = validation(load_config(), logger, self.spark)
 
     def csv_to_delta(self):
         
         self.validator.validate_raw_csv_files_exist()
+        raw_df = self.validator.validate_raw_csv_schema()
+        self.validator.validate_raw_csv_non_empty(raw_df)
 
         logger.info("Starting transformation file csv to delta format")
 
-        df = self.spark_df.withColumnRenamed("% Holding", "precent_holding")
+        df = raw_df.withColumnRenamed("% Holding", "precent_holding")
         df.write.format("delta").mode("overwrite").saveAsTable(qqq_delta_file_name)
 
         logger.info("Transformation file csv to delta format completed")
@@ -37,6 +37,6 @@ if __name__ == "__main__":
 
     path = os.path.join(raw_csv_files_path, qqq_entities_filename)
     spark_df = spark.read.csv(path, header=True, inferSchema=True)
-    run = transformation(spark, spark_df)
+    run = transformation(spark)
     df = run.csv_to_delta()
     
