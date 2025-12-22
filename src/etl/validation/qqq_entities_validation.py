@@ -71,6 +71,18 @@ class validation:
 
 
         logger.warning(f"Missing sector values for tickers: {missing_sector_tickers}")
+
+    def validate_null_values(self, df: DataFrame) -> None:
+
+        logger.info(f"Start validating null values in decimal column")
+
+        null_count = df.filter(df["precent_holding"].isNull()).count()
+        if null_count > 0:
+            logger.warning(f"Found {null_count} null values in decimal column")
+
+        logger.info("No null values found in decimal column")
+
+        
         
 
 if __name__ == "__main__":

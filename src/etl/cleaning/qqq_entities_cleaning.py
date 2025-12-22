@@ -3,15 +3,17 @@ from src.config.logger import get_logger
 from src.config.config_loader import load_config
 from pyspark.sql import DataFrame
 from pyspark.sql.functions import col, lower, trim, regexp_replace
-
+from src.etl.validation.qqq_entities_validation import validation
 
 logger = get_logger("cleaning")
 
 class cleaning:
-    def __init__(self, spark, df):
+    def __init__(self, spark, df, logger):
         self.spark = spark
         self.df = df
-        
+        self.logger = logger
+        self.validator = validation(load_config(), self.logger)
+
     def clean_qqq_entities_col(self, df: DataFrame) -> DataFrame:
 
         logger.info("Start work with columns standards in qqq entities table")
@@ -39,6 +41,8 @@ class cleaning:
             )
             
         logger.info("Rows standards in qqq entities table are done")
+
+        self.validator.validate_null_values(df)
         
         df.write.format("delta").mode("overwrite").saveAsTable(qqq_silver_path)
 
@@ -49,7 +53,7 @@ class cleaning:
 if __name__ := "__main__":
     
     df = spark.table(qqq_enriched_delta_file_name)
-    cleaning_run = cleaning(spark, df)
+    cleaning_run = cleaning(spark, df, logger)
     run_col = cleaning_run.clean_qqq_entities_col(df)
     run_rows = cleaning_run.clean_qqq_entities_rows(run_col)
     
