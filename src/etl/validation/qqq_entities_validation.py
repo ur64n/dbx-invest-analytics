@@ -5,14 +5,16 @@ from src.etl.utils.validation_helper import raw_csv_file_list, normalize_filenam
 from src.config.config_loader import load_config
 from src.config.logger import get_logger
 from pyspark.sql.utils import AnalysisException
-from src.config.config import raw_qqq_delta_file_path
+from src.config.config import raw_qqq_delta_file_path, raw_csv_files_path, qqq_entities_filename
 from pyspark.sql import DataFrame
+import os
 
 logger = get_logger("validation")
 
 class validation:
-    def __init__(self, config: dict, logger):
+    def __init__(self, config: dict, logger, spark):
         self.config = config
+        self.spark = spark
 
     def validate_raw_csv_files_exist(self):
         
@@ -21,21 +23,59 @@ class validation:
         for f in raw_csv_file_list():
             normalize_filename(f)
 
-        normalized_csv_files = set(raw_csv_file_list()) # uruchamia zebranie nazw pliku do zbioru (set)
-        required_files = set(self.config["required_files"]) # uruchamia config_loader odczytujacy plik yaml i zbiera z z niego liste wymaganych plikow i przeksztalca zbioru (set)
+        normalized_csv_files = set(raw_csv_file_list())
+        required_files = set(self.config["required_files"])
 
-        missing_files = required_files - normalized_csv_files # odejmuje wartosci z dwoch list
+        missing_files = required_files - normalized_csv_files
 
-        if missing_files: # Zwraca wartosc bool 
-            raise Exception(f"Missing required files: {missing_files}") # jezeli jakas nazwa zostanie znaleziona to wyrzuca blad z nazwa pliku
+        if missing_files:
+            raise Exception(f"Missing required files: {missing_files}") 
 
         logger.info("All required files exist")
+
+    def validate_raw_csv_schema(self) -> None:
+
+        logger.info(f"Start validating required columns exist in raw csv files")
+
+        csv_path = os.path.join(raw_csv_files_path, qqq_entities_filename)
+        df = self.spark.read.csv(csv_path, header=True, inferSchema=True)
+        required_cols = {"Symbol", "Name", "% Holding"}
+
+        missing_cols = required_cols - set(df.columns)
+
+        if missing_cols:
+            raise ValueError(f"Missing required column {missing_cols}")
+
+        return df
+
+    def validate_raw_csv_non_empty(self, df: DataFrame) -> None:
+
+        logger.info(f"Start validating raw csv file is not empty")
+
+        row_count = df.count()
+        if row_count == 0:
+            raise ValueError(f"Raw csv file is empty")
+
+        logger.info(f"Raw csv file contain {row_count} rows")
 
     def validate_delta_table_exist(self, spark, table_name: str):
         try:
             spark.table(table_name)
         except AnalysisException:
             raise Exception(f"Delta table {table_name} does not exist")
+
+    def validate_qqq_cols_exist(self, df: DataFrame) -> None:
+        
+        logger.info(f"Start validating required columns exist in base df")
+
+        required_cols = {"Symbol", "Name", "precent_holding"}
+
+        missing_cols = required_cols - set(df.columns)
+
+        if missing_cols:
+            raise ValueError(f"Missing required column {missing_cols}")
+
+        logger.info("All required columns exist in base df")
 
     def validate_enrichment_cols(self, df: DataFrame, meta_df: DataFrame) -> None:
         
@@ -71,6 +111,18 @@ class validation:
 
 
         logger.warning(f"Missing sector values for tickers: {missing_sector_tickers}")
+
+    def validate_null_values(self, df: DataFrame) -> None:
+
+        logger.info(f"Start validating null values in decimal column")
+
+        null_count = df.filter(df["precent_holding"].isNull()).count()
+        if null_count > 0:
+            logger.warning(f"Found {null_count} null values in decimal column")
+
+        logger.info("No null values found in decimal column")
+
+        
         
 
 if __name__ == "__main__":

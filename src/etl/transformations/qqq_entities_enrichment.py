@@ -60,6 +60,8 @@ class enrichment:
 
     def enrich(self, meta_df) -> DataFrame:
 
+        self.validator.validate_qqq_cols_exist(self.df)
+
         self.validator.validate_enrichment_cols(self.df, meta_df)
 
         logger.info(f"Start combining qqq_entities_file with enriched dataframe by categories and industries")
