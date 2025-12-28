@@ -12,25 +12,24 @@ class cleaning:
         self.spark = spark
         self.df = df
         self.logger = logger
-        self.validator = validation(load_config(), self.logger)
+        self.validator = validation(load_config(), self.logger, self.spark)
 
     def clean_qqq_entities_col(self, df: DataFrame) -> DataFrame:
 
-        logger.info("Start work with columns standards in qqq entities table")
+        logger.info("Start columns standarization in qqq enriched table")
 
-        df = df.drop("shares")
         df = df.toDF(*[col.strip().lower() for col in df.columns])
         df = df.withColumn(
                 "precent_holding",
                 regexp_replace(col("precent_holding"), "%", "").cast("decimal(5,2)")
             )
-        logger.info("Columns standards in qqq entities table are done")
+        logger.info("Columns standarization in qqq enriched table are done")
 
         return df
     
     def clean_qqq_entities_rows(self, df: DataFrame) -> DataFrame:
 
-        logger.info("Start cleaning rows standards in qqq entities table")
+        logger.info("Start rows standardization in qqq enriched table")
 
         text_cols = ['symbol', 'name', 'sector', 'industry']
 
@@ -40,13 +39,13 @@ class cleaning:
                 lower(trim(regexp_replace(col(c), "\\s+", " ")))
             )
             
-        logger.info("Rows standards in qqq entities table are done")
+        logger.info("Rows standardization in qqq enriched table are done")
 
         self.validator.validate_null_values(df)
         
-        df.write.format("delta").mode("overwrite").saveAsTable(qqq_silver_path)
+        df.write.format("delta").option("overwriteSchema", "true").mode("overwrite").saveAsTable(qqq_silver_path)
 
-        logger.info("Cleaned qqq entities table saved successfully in silver layer")
+        logger.info("Cleaned qqq enriched table, saved successfully in silver layer")
 
 #TODO: Zastanowic sie nad walidacjami i przejsc do szukania kolejnych danych
 
