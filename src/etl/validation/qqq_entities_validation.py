@@ -5,7 +5,7 @@ from src.etl.utils.validation_helper import raw_csv_file_list, normalize_filenam
 from src.config.config_loader import load_config
 from src.config.logger import get_logger
 from pyspark.sql.utils import AnalysisException
-from src.config.config import raw_qqq_delta_file_path, raw_csv_files_path, qqq_entities_filename
+from src.config.config import raw_csv_filespath
 from pyspark.sql import DataFrame
 from pyspark.sql.functions import col, lit
 import os
@@ -36,22 +36,17 @@ class validation:
 
         logger.info("All required files exist")
 
-    def validate_raw_csv_schema(self) -> None:
+    def validate_raw_csv_schema(self, df: DataFrame) -> None:
 
         logger.info(f"Start validating required columns exist in raw qqq entities csv file")
 
-        csv_path = os.path.join(raw_csv_files_path, qqq_entities_filename)
-        df = self.spark.read.csv(csv_path, header=True, inferSchema=True)
         required_cols = {"Symbol", "Name", "% Holding"}
-
         missing_cols = required_cols - set(df.columns)
 
         if missing_cols:
             raise ValueError(f"Missing required column {missing_cols}")
 
         logger.info("All required columns exist in raw qqq entities csv file")
-
-        return df
 
     def validate_raw_csv_non_empty(self, df: DataFrame) -> None:
 

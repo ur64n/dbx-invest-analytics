@@ -1,4 +1,4 @@
-from src.config.config import qqq_enriched_delta_file_name, qqq_silver_path
+from src.config.config import delta_qqq_enriched_filename, qqq_silver_filepath
 from src.config.logger import get_logger
 from src.config.config_loader import load_config
 from pyspark.sql import DataFrame
@@ -43,15 +43,13 @@ class cleaning:
 
         self.validator.validate_null_values(df)
         
-        df.write.format("delta").option("overwriteSchema", "true").mode("overwrite").saveAsTable(qqq_silver_path)
+        df.write.format("delta").option("overwriteSchema", "true").mode("overwrite").saveAsTable(qqq_silver_filepath)
 
         logger.info("Cleaned qqq enriched table, saved successfully in silver layer")
 
-#TODO: Zastanowic sie nad walidacjami i przejsc do szukania kolejnych danych
-
 if __name__ := "__main__":
     
-    df = spark.table(qqq_enriched_delta_file_name)
+    df = spark.table(delta_qqq_enriched_filename)
     cleaning_run = cleaning(spark, df, logger)
     run_col = cleaning_run.clean_qqq_entities_col(df)
     run_rows = cleaning_run.clean_qqq_entities_rows(run_col)

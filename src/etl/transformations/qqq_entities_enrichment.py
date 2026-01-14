@@ -1,5 +1,5 @@
 from src.config.logger import get_logger
-from src.config.config import qqq_delta_file_name, qqq_enriched_delta_file_name
+from src.config.config import delta_qqq_enriched_filename, delta_qqq_filepath
 from src.config.config_loader import load_config
 from pyspark.sql.types import StructType, StructField, StringType
 from pyspark.sql import DataFrame
@@ -76,13 +76,13 @@ class enrichment:
 
         logger.info(f"Start saving enriched dataframe to delta silver layer")
 
-        result_df.write.format("delta").mode("overwrite").saveAsTable(qqq_enriched_delta_file_name)
+        result_df.write.format("delta").mode("overwrite").saveAsTable(delta_qqq_enriched_filename)
 
         logger.info(f"Saving enriched dataframe to delta silver layer finished")
 
 if __name__ == "__main__":
 
-    df = spark.table(qqq_delta_file_name)
+    df = spark.table(delta_qqq_filepath)
     enr = enrichment(logger, spark, df)
     tickers = enr.extract_tickers()
     category_df = enr.fetch_categories(tickers)
