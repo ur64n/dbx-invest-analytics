@@ -1,6 +1,6 @@
 import os
 import re
-from src.config.config import raw_csv_files_path, raw_qqq_delta_file_path
+from src.config.config import raw_csv_filespath, raw_qqq_delta_file_path
 from src.config.logger import get_logger
 
 logger = get_logger("validation_helper")
@@ -8,8 +8,8 @@ logger = get_logger("validation_helper")
 def raw_csv_file_list():
     # Pobiera listę plików z katalogu Volumes
     return [
-        f for f in os.listdir(raw_csv_files_path)
-        if os.path.isfile(os.path.join(raw_csv_files_path, f))
+        f for f in os.listdir(raw_csv_filespath)
+        if os.path.isfile(os.path.join(raw_csv_filespath, f))
     ]
 
 def normalize_filename(filename:str) -> str:
@@ -18,8 +18,8 @@ def normalize_filename(filename:str) -> str:
 
     new_name = re.sub(r"[-_ ]?\d{2}[-\.]\d{2}[-\.]\d{4}", "", filename)
 
-    old_path = os.path.join(raw_csv_files_path, filename)
-    new_path = os.path.join(raw_csv_files_path, new_name)
+    old_path = os.path.join(raw_csv_filespath, filename)
+    new_path = os.path.join(raw_csv_filespath, new_name)
 
     os.rename(old_path, new_path)
     
