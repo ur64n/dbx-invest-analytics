@@ -131,7 +131,7 @@ The codebase is:
 
 # dbx-invest-analytics PL
 
-## Project Overview
+## Opis Projektu
 
 `dbx-invest-analytics` to projekt analityczno-predykcyjny, którego celem jest ocena wpływu czynników rynkowych, makroekonomicznych oraz geopolitycznych na sektor technologiczny oraz ETF-y technologiczne (w szczególności QQQ).
 
@@ -159,9 +159,9 @@ Orkiestracja procesów realizowana jest przy użyciu **Databricks Jobs & Pipelin
 
 ---
 
-## Current Data Scope
+## Obecny zakres danych
 
-### 1. Market Data – ETF QQQ
+### 1. Dane podmiotów QQQ ETF Invesco
 
 - Źródło: Invesco QQQ ETF constituents (CSV)
 - Zakres:
@@ -181,7 +181,7 @@ Plik źródłowy ETF QQQ musi być pobierany **ręcznie** i umieszczony w:
 
 ---
 
-### 2. Macro-Economic Data – FRED API
+### 2. Dane makroekonomiczne - FRED API
 
 Dane makroekonomiczne pobierane są z **FRED API** w formacie XML.
 
@@ -209,7 +209,7 @@ Ograniczenie zakresu czasowego oraz dalsza normalizacja danych realizowana będz
 
 ---
 
-## Project Structure
+## Struktura projektu
 
 Projekt wykorzystuje **Modular Python Project Structure**.
 
@@ -228,21 +228,21 @@ Kod jest:
 
 ---
 
-## Configuration & Secrets
+## Konfiguracja & ochrona
 
 - Sekrety (np. FRED API key) przechowywane są w **Databricks Secrets**.
 - Konfiguracja ścieżek i parametrów znajduje się w module `config`.
 
 ---
 
-## Dependencies
+## Zaleznosci
 
 - Wymagane biblioteki znajdują się w pliku `requirements`.
 - Część zależności instalowana jest bezpośrednio na poziomie **Databricks Job / Pipeline**.
 
 ---
 
-## Project Status
+## Status projektu
 
 **Zrealizowane:**
 - struktura projektu,
@@ -258,7 +258,7 @@ Kod jest:
 
 ---
 
-## Useful Links
+## Uzyteczne linki
 
 - Invesco QQQ ETF constituents (CSV):  
   https://www.barchart.com/etfs-funds/quotes/QQQ/constituents
