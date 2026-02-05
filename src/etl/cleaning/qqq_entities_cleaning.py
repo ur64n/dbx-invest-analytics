@@ -1,56 +1,43 @@
-from src.config.config import delta_qqq_enriched_filename, qqq_silver_filepath
-from src.config.logger import get_logger
-from src.config.config_loader import load_config
 from pyspark.sql import DataFrame
 from pyspark.sql.functions import col, lower, trim, regexp_replace
-from src.etl.validation.qqq_entities_validation import validation
+from src.config.logger import get_logger
+from src.etl.validation.qqq_entities_validation import QQQEntitiesValidator
 
 logger = get_logger("cleaning")
 
-class cleaning:
-    def __init__(self, spark, df, logger):
-        self.spark = spark
-        self.df = df
-        self.logger = logger
-        self.validator = validation(load_config(), self.logger, self.spark)
 
-    def clean_qqq_entities_col(self, df: DataFrame) -> DataFrame:
+class QQQEntitiesCleaner:
+    """
+    Data standardization only.
+    DataFrame -> DataFrame
+    """
 
-        logger.info("Start columns standarization in qqq enriched table")
+    @staticmethod
+    def clean_columns(df: DataFrame) -> DataFrame:
+        logger.info("Standardizing column names and types")
 
-        df = df.toDF(*[col.strip().lower() for col in df.columns])
+        df = df.toDF(*[c.strip().lower() for c in df.columns]) # list comp zbiera liste nazw kolumn z dataframe zmniejsza i usuwa biale znaki, a .toDF ustawia nowe nazwy w nowym dataframe
+
         df = df.withColumn(
-                "precent_holding",
-                regexp_replace(col("precent_holding"), "%", "").cast("decimal(5,2)")
-            )
-        logger.info("Columns standarization in qqq enriched table are done")
+            "precent_holding",
+            regexp_replace(col("precent_holding"), "%", "")
+            .cast("decimal(5,2)")
+        )
 
         return df
-    
-    def clean_qqq_entities_rows(self, df: DataFrame) -> DataFrame:
 
-        logger.info("Start rows standardization in qqq enriched table")
+    @staticmethod
+    def clean_rows(df: DataFrame) -> DataFrame:
+        logger.info("Standardizing row values")
 
-        text_cols = ['symbol', 'name', 'sector', 'industry']
+        text_cols = ["symbol", "name", "sector", "industry"]
 
         for c in text_cols:
             df = df.withColumn(
                 c,
                 lower(trim(regexp_replace(col(c), "\\s+", " ")))
             )
-            
-        logger.info("Rows standardization in qqq enriched table are done")
 
-        self.validator.validate_null_values(df)
-        
-        df.write.format("delta").option("overwriteSchema", "true").mode("overwrite").saveAsTable(qqq_silver_filepath)
+        QQQEntitiesValidator.validate_no_null_holdings(df)
 
-        logger.info("Cleaned qqq enriched table, saved successfully in silver layer")
-
-if __name__ := "__main__":
-    
-    df = spark.table(delta_qqq_enriched_filename)
-    cleaning_run = cleaning(spark, df, logger)
-    run_col = cleaning_run.clean_qqq_entities_col(df)
-    run_rows = cleaning_run.clean_qqq_entities_rows(run_col)
-    
+        return df

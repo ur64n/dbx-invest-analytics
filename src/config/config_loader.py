@@ -1,11 +1,18 @@
 import yaml
-from .config import settings_path
+from pathlib import Path
 
-# Otwiera plik yaml
-def load_config():
-    with open(settings_path, "r") as file:
-        return yaml.safe_load(file)
+def load_config(env: str = "dev") -> dict: 
 
-if __name__ == "__main__":
-    config = load_config()
-    print(config)
+    """
+    Load environment configuration.
+    """
+    config_path = Path(__file__).parent / f"{env}.yaml" 
+    with open(config_path, "r") as f:
+        return yaml.safe_load(f)
+    
+
+#Zwraca slownik z klucz:wartosc, na podstawie pliku config dev.yaml, gdy nie podamy przy wywolaniu srodowiska domyslne jest "dev"
+
+#Aby uruchomić na innym  środowisku wystarczy w pipeline uruchomić load_config("test/prod")
+
+# config_path = buduje scieżkę do folderu config i "dokleja" env.yaml czyli plik srodowiskowy config, następnie go bezpiecznie otwiera i zamyka po zakonczeniu uzywania

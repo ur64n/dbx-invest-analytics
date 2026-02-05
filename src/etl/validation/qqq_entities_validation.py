@@ -1,160 +1,129 @@
-import sys
-project_root = "/Workspace/Users/jakub.kaczmarczyk443@gmail.com/dbx-invest-analytics/src"
-sys.path.append(project_root)
-from src.etl.utils.validation_helper import raw_csv_file_list, normalize_filename
-from src.config.config_loader import load_config
-from src.config.logger import get_logger
-from pyspark.sql.utils import AnalysisException
-from src.config.config import raw_csv_filespath
 from pyspark.sql import DataFrame
 from pyspark.sql.functions import col, lit
-import os
-
-#TODO: Na podstawie metod walidacji, wykonac sobie notatke (notion) jakie walidacje wykonuje sie zwykle na tabelach. (Opisac proces slownie zalaczyc kod oraz funkcje, ktorych sie uzywa.)
+from src.config.logger import get_logger
 
 logger = get_logger("validation")
 
-class validation:
-    def __init__(self, config: dict, logger, spark):
-        self.config = config
-        self.spark = spark
+class QQQEntitiesValidator:
+    """
+    Pure validation logic.
+    No IO, no SparkSession, no filesystem access.
+    """
 
-    def validate_raw_csv_files_exist(self):
-        
-        logger.info("Start validating raw CSV file exists")
+    # ---------- RAW CSV VALIDATION ----------
 
-        for f in raw_csv_file_list():
-            normalize_filename(f)
-
-        normalized_csv_files = set(raw_csv_file_list())
-        required_files = set(self.config["required_files"])
-
-        missing_files = required_files - normalized_csv_files
-
-        if missing_files:
-            raise Exception(f"Missing required files: {missing_files}") 
-
-        logger.info("All required files exist")
-
-    def validate_raw_csv_schema(self, df: DataFrame) -> None:
-
-        logger.info(f"Start validating required columns exist in raw qqq entities csv file")
+    @staticmethod
+    def validate_raw_csv_schema(df: DataFrame) -> None:
+        logger.info("Validating raw CSV schema")
 
         required_cols = {"Symbol", "Name", "% Holding"}
-        missing_cols = required_cols - set(df.columns)
+        missing = required_cols - set(df.columns)
 
-        if missing_cols:
-            raise ValueError(f"Missing required column {missing_cols}")
+        if missing:
+            raise ValueError(f"Missing required columns in raw CSV: {missing}")
 
-        logger.info("All required columns exist in raw qqq entities csv file")
+    @staticmethod
+    def validate_raw_csv_not_empty(df: DataFrame) -> None:
+        logger.info("Validating raw CSV not empty")
 
-    def validate_raw_csv_non_empty(self, df: DataFrame) -> None:
+        if df.count() == 0:
+            raise ValueError("Raw CSV DataFrame is empty")
 
-        logger.info(f"Start validating raw csv file is not empty")
 
-        row_count = df.count()
-        if row_count == 0:
-            raise ValueError(f"Raw csv file is empty")
+    # ---------- BRONZE QQQ VALIDATION ----------
 
-        logger.info(f"Raw csv file contain {row_count} rows")
-
-    def validate_delta_table_exist(self, spark, table_name: str):
-        try:
-            spark.table(table_name)
-        except AnalysisException:
-            raise Exception(f"Delta table {table_name} does not exist")
-
-    def validate_qqq_cols_exist(self, df: DataFrame) -> None:
-        
-        logger.info(f"Start validating required columns exist in base qqq delta table")
+    @staticmethod
+    def validate_base_columns(df: DataFrame) -> None:
+        logger.info("Validating base QQQ columns")
 
         required_cols = {"Symbol", "Name", "precent_holding"}
+        missing = required_cols - set(df.columns)
 
-        missing_cols = required_cols - set(df.columns)
+        if missing:
+            raise ValueError(f"Missing required columns: {missing}")
 
-        if missing_cols:
-            raise ValueError(f"Missing required column {missing_cols}")
-
-        logger.info("All required columns exist in base qqq delta table")
-
-    def validate_qqq_col_values(self, df: DataFrame) -> None:
-        
-        logger.info("Start validating row values in bronze qqq delta table")
+    @staticmethod
+    def validate_column_values(df: DataFrame) -> None:
+        logger.info("Validating column values")
 
         cols = ["Symbol", "Name", "precent_holding"]
 
         for c in cols:
-            count_empties = df.filter(col(c).isNull() | (col(c) == lit(""))).count() # lit tworzy fikcyjna stala pusta wartosc i filtruje puste wartosci na podstawie porownania w kolumnach.
-            
-            if count_empties > 0:
+            empty_count = df.filter(
+                col(c).isNull() | (col(c) == lit(""))
+            ).count()
 
-                if c.lower() == "symbol":
-                    raise ValueError(f"Found empty values in qqq delta table column: {c}")
+            if empty_count > 0:
+                if c == "Symbol":
+                    raise ValueError(f"Found empty values in critical column: {c}")
+                logger.warning(
+                    f"Found {empty_count} empty values in column: {c}"
+                )
 
-                logger.warning(f"Found: {count_empties} empty values in qqq delta table column: {c}")
+    @staticmethod
+    def validate_symbol_uniqueness(df: DataFrame) -> None:
+        logger.info("Validating symbol uniqueness")
 
-        logger.info("All required columns have no empty values in qqq delta table")
+        total = df.count()
+        distinct = df.select("Symbol").distinct().count()
 
-    def validate_enrichment_cols(self, df: DataFrame, category_df: DataFrame) -> None:
-        
-        logger.info(f"Start validating required columns exist in qqq delta file and meta df")
+        if total != distinct:
+            raise ValueError(
+                f"Found {total - distinct} duplicate Symbol values"
+            )
 
-        required_base_col = {"Symbol"}
-        missing_base_col = required_base_col - set(df.columns)
-        if missing_base_col:
-            raise ValueError(f"Missing required column {missing_base_col}")
+    # ---------- ENRICHMENT VALIDATION ----------
 
-        required_meta_cols = {"symbol", "sector", "industry"}
-        missing_meta_cols = required_meta_cols - set(category_df.columns)
-        if missing_meta_cols:
-            raise ValueError(f"Missing required column {missing_meta_cols}")
+    @staticmethod
+    def validate_enrichment_inputs(
+        base_df: DataFrame, category_df: DataFrame
+    ) -> None:
+        logger.info("Validating enrichment inputs")
 
-        logger.info("All required columns in base delta table and category df exists")
+        base_required = {"symbol"}
+        category_required = {"symbol", "sector", "industry"}
 
-    def validate_missing_categories(self, tickers: list[str], category_df: DataFrame) -> None:
-        
-        logger.warning(f"Start validating missing categories in combined dataframe")
+        missing_base = base_required - set(base_df.columns)
+        missing_category = category_required - set(category_df.columns)
 
-        total_tickers = len(tickers)
+        if missing_base:
+            raise ValueError(
+                f"Missing columns in base dataframe: {missing_base}"
+            )
 
-        not_null_sector = category_df.filter(category_df.sector.isNotNull()).count()
-        not_null_industry = category_df.filter(category_df.industry.isNotNull()).count()
+        if missing_category:
+            raise ValueError(
+                f"Missing columns in category dataframe: {missing_category}"
+            )
 
-        difference_sector = total_tickers - not_null_sector
-        difference_industry = total_tickers - not_null_industry
-        
-        logger.warning(f"Missing sector/category values: {difference_sector}, missing industry values: {difference_industry}")
+    @staticmethod
+    def validate_missing_categories(
+        total_symbols: int, category_df: DataFrame
+    ) -> None:
+        logger.warning("Validating missing enrichment categories")
 
-        missing_sector_tickers = [row["symbol"] for row in category_df.filter(category_df.sector.isNull()).select("symbol").collect()]
+        missing_sector = category_df.filter(
+            category_df.sector.isNull()
+        ).count()
 
-        logger.warning(f"Missing sector/category values for tickers: {missing_sector_tickers}")
+        missing_industry = category_df.filter(
+            category_df.industry.isNull()
+        ).count()
 
-    def validate_null_values(self, df: DataFrame) -> None:
+        if missing_sector > 0 or missing_industry > 0:
+            logger.warning(
+                f"Missing sector={missing_sector}, industry={missing_industry}"
+            )
 
-        logger.info(f"Start validating null values in enriched table decimal column")
+    # ---------- SILVER VALIDATION ----------
+
+    @staticmethod
+    def validate_no_null_holdings(df: DataFrame) -> None:
+        logger.info("Validating no null percent holdings")
 
         null_count = df.filter(df["precent_holding"].isNull()).count()
+
         if null_count > 0:
-            logger.warning(f"Found {null_count} null values in decimal column")
-
-        logger.info("No null values found in enriched table decimal column")
-
-    def validate_id_uniqueness(self, df: DataFrame) -> None:
-
-        logger.info("Start validating id symbol column uniqueness")
-
-        count_all = df.count()
-        count_distinct = df.select("Symbol").distinct().count()
-
-        if count_all != count_distinct:
-            raise ValueError(f"Found {count_all - count_distinct} duplicate values in id column")
-
-        logger.info("All id values are unique")
-
-
-if __name__ == "__main__":
-
-    config = load_config()
-    run = validation(config)
-    run.validate_raw_csv_files_exist()
-    
+            logger.warning(
+                f"Found {null_count} null values in precent_holding column"
+            )

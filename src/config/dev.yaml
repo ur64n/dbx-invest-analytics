@@ -1,0 +1,32 @@
+# ---------- environment ----------
+env: dev # Jawne srodowisko
+
+# ---------- paths ----------
+paths:
+  raw_csv: /Volumes/workspace/bronze/raw/           
+  raw_macro: /Volumes/workspace/bronze/raw/macro/   
+
+# ---------- filenames ----------
+files:
+  qqq_entities: qqq-etf-constituents.csv 
+
+# ---------- tables ----------
+tables:
+  bronze_qqq: bronze.qqq_etf_constituents
+  bronze_qqq_enriched: bronze.qqq_etf_entities_enriched
+  silver_qqq: silver.qqq_silver_entities
+
+# ---------- fred ----------
+fred:
+  base_url: https://api.stlouisfed.org/fred
+  series_ids:
+    - CPIAUCSL
+    - CPILFESL
+    - FEDFUNDS
+    - DGS10
+    - DGS2
+    - UNRATE
+    - INDPRO
+    - T10YIE
+  rate_limit_per_second: 2
+  window_refresh_months: 6
