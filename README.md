@@ -1,15 +1,17 @@
 # dbx-invest-analytics EN
 
-## Project Overview
+## Project Description
 
-`dbx-invest-analytics` is an analytical and predictive project aimed at assessing the impact of market, macroeconomic, and geopolitical factors on the technology sector and technology-focused ETFs (with a primary focus on QQQ).
+`dbx-invest-analytics` is an analytical and predictive project whose goal is to assess the impact of market, macroeconomic, and geopolitical factors on the technology sector and technology ETFs (especially QQQ).
 
-The project integrates:
-- market data (ETF → companies),
-- macroeconomic indicators,
-- and in later stages: news, political decisions, and geopolitical events,
+The project integrates data:
+- market (ETF → companies),
+- macroeconomic,
+- in later stages: news, political decisions, and geopolitical data,
 
-and applies analytical techniques and AI to generate investment-related insights.
+and then uses analytical techniques and AI to generate investment insights.
+
+The project implements **deterministic ETL pipelines** with a clear separation of responsibilities (extraction / transformation / validation / cleaning / orchestration).
 
 ---
 
@@ -22,109 +24,115 @@ The project is built entirely using:
 - **Delta Lake**
 - **Python (Spark, SQL)**
 - **GitHub (dev / test / prod)**
-
-The data architecture follows the **Medallion Architecture (Bronze → Silver → Gold)**.  
-Process orchestration is handled via **Databricks Jobs & Pipelines**.
+- **Databricks Jobs & Pipelines**
 
 ---
 
 ## Current Data Scope
 
-### 1. Market Data – ETF QQQ
+### 1. Invesco QQQ ETF Constituents
 
 - Source: Invesco QQQ ETF constituents (CSV)
 - Scope:
   - list of companies,
   - sectors / business categories,
 - Status:
-  - data transformed into the **Silver layer**,
+  - data processed into the **Silver layer**,
   - validation and cleaning completed,
   - stored as **Delta Tables**.
 
-The source QQQ ETF file must be downloaded **manually** and placed in:
-/Volumes/workspace/bronze/raw
-
+**Input:**
+The source QQQ ETF file must be downloaded **manually** and placed in:  
+`/Volumes/workspace/bronze/raw`
 
 ---
 
-### 2. Macro-Economic Data – FRED API
+### 2. Macroeconomic Data – FRED API
 
-Macroeconomic data is extracted from the **FRED API** in XML format.
+Macroeconomic data is fetched from the **FRED API** in XML format.
 
 Currently used indicators:
-- **CPIAUCSL** – Consumer Price Index (inflation)
-- **CPILFESL** – Core Consumer Price Index
-- **T10YIE** – 10-Year Breakeven Inflation Rate
-- **FEDFUNDS** – Federal Funds Effective Rate
-- **DGS10** – 10-Year Treasury Yield
-- **DGS2** – 2-Year Treasury Yield
-- **UNRATE** – Unemployment Rate
-- **INDPRO** – Industrial Production Index
+- **CPIAUCSL** – inflation (CPI)
+- **CPILFESL** – core inflation (Core CPI)
+- **T10YIE** – 10-year inflation expectations
+- **FEDFUNDS** – Federal Funds Rate
+- **DGS10** – 10-year Treasury yield
+- **DGS2** – 2-year Treasury yield
+- **UNRATE** – unemployment rate
+- **INDPRO** – industrial production
 
 Data frequency:
 - daily or monthly (depending on the indicator)
 
 Status:
 - data ingested into the **Bronze layer** as raw XML files,
-- the first run retrieves the full available history,
-- subsequent runs operate **incrementally**, refreshing:
-  - newly available data,
-  - historical revisions within the last **6 months**.
-
-Time-range filtering and normalization are handled later in the **Silver layer**.
-
----
-
-## Project Structure
-
-The project follows a **Modular Python Project Structure**.
-
-Main directories: 
-- src/etl (extraction/transformation/cleaning...)
-config files 
-utils
-
-
-
-The codebase is:
-- modular,
-- encapsulated,
-- class- and method-based,
-- designed for extensibility and scalability.
+- the first run loads full historical data,
+- subsequent runs operate **incrementally** and refresh:
+  - new data,
+  - revisions from the last **6 months**,
+  - overwrite Bronze files per indicator,
+- parsing, validation, normalization, and persistence are handled in the **Silver layer**.
 
 ---
 
-## Configuration & Secrets
+## Project Architecture
 
-- Secrets (e.g., FRED API key) are managed via **Databricks Secrets**.
-- Paths and runtime parameters are defined in the `config` module.
+The project follows a **Modular Python Project Structure** with clear responsibility contracts.
+
+**Main directories:**
+- `src/pipelines` — orchestration (entrypoints),
+- `src/etl/extraction` — data extraction and reading (I/O),
+- `src/etl/transformations` — transformations without I/O,
+- `src/etl/validation` — data contract validation,
+- `src/etl/cleaning` — data standardization,
+- `src/etl/schema` — data schemas,
+- `src/config` — configuration and logging,
+- `src/utils` — helper utilities.
+
+**Principles:**
+- the pipeline is the only entrypoint,
+- only the pipeline performs I/O and controls execution order,
+- ETL modules are pure, deterministic, and testable,
+- no side effects on import.
+
+The project is based on the Medallion architecture (Bronze / Silver / Gold).
+
+---
+
+## Configuration and Security
+
+- secrets (e.g. FRED API Key) are stored in **Databricks Secrets**,
+- paths and parameters are loaded via `config_loader`,
+- dependencies are defined in the `requirements` file.
 
 ---
 
 ## Dependencies
 
-- Required libraries are listed in the `requirements` file.
-- Some dependencies are installed directly at the **Databricks Job / Pipeline** level.
+- required libraries are listed in the `requirements` file,
+- some dependencies are installed directly at the **Databricks Job / Pipeline** level.
 
 ---
 
 ## Project Status
 
 **Completed:**
-- project structure,
-- configuration and validations,
-- Silver layer for ETF QQQ,
-- macro data extraction from FRED API.
+- Silver pipeline for ETF QQQ (Bronze → Silver),
+- macroeconomic FRED pipeline (Bronze → Silver),
+- data contract validations,
+- data cleaning and normalization,
+- deterministic orchestration,
+- clear separation of module responsibilities.
 
 **Planned:**
-- Silver transformations for macro data,
+- Gold layer (aggregations, analytics),
 - integration of news and geopolitical data,
-- sector-level scoring,
+- sector scoring,
 - predictive models and AI-driven insights.
 
 ---
 
-## Useful Links
+## Links
 
 - Invesco QQQ ETF constituents (CSV):  
   https://www.barchart.com/etfs-funds/quotes/QQQ/constituents
@@ -142,6 +150,8 @@ Projekt integruje dane:
 
 a następnie wykorzystuje techniki analityczne i AI do generowania wniosków inwestycyjnych.
 
+Projekt realizuje **deterministyczne pipeline’y ETL** z wyraźnym rozdziałem odpowiedzialności (ekstrakcja / transformacja / walidacja / czyszczenie / orkiestracja).
+
 ---
 
 ## Technology Stack
@@ -153,9 +163,7 @@ Projekt jest budowany w całości w:
 - **Delta Lake**
 - **Python (Spark, SQL)**
 - **GitHub (dev / test / prod)**
-
-Architektura danych oparta jest o **Medallion Architecture (Bronze → Silver → Gold)**.  
-Orkiestracja procesów realizowana jest przy użyciu **Databricks Jobs & Pipelines**.
+- **Databricks Jobs & Pipelines**
 
 ---
 
@@ -172,12 +180,9 @@ Orkiestracja procesów realizowana jest przy użyciu **Databricks Jobs & Pipelin
   - walidacja i czyszczenie wykonane,
   - zapis w formacie **Delta Table**.
 
+**Input:**
 Plik źródłowy ETF QQQ musi być pobierany **ręcznie** i umieszczony w:
 /Volumes/workspace/bronze/raw
-
-
----
-
 
 ---
 
@@ -204,34 +209,40 @@ Status:
 - kolejne runy działają **inkrementacyjnie** i odświeżają:
   - nowe dane,
   - rewizje z ostatnich **6 miesięcy**.
-
-Ograniczenie zakresu czasowego oraz dalsza normalizacja danych realizowana będzie w **warstwie Silver**.
-
----
-
-## Struktura projektu
-
-Projekt wykorzystuje **Modular Python Project Structure**.
-
-Główne katalogi:
-
-src/etl (extraction/transformation/cleaning...)
-config files 
-utils
-
-
-Kod jest:
-- modularny,
-- enkapsulowany,
-- oparty o klasy i metody,
-- przygotowany pod dalszą rozbudowę pipeline’ów.
+  - nadpisują pliki w warstwie Bronze per wskaźnik,
+- parsowanie, walidacja, normalizacja i zapis realizowane w warstwie **Silver**.
 
 ---
 
-## Konfiguracja & ochrona
+## Architektura projektu
 
-- Sekrety (np. FRED API key) przechowywane są w **Databricks Secrets**.
-- Konfiguracja ścieżek i parametrów znajduje się w module `config`.
+Projekt wykorzystuje **Modular Python Project Structure** z kontraktami odpowiedzialności.
+
+**Główne katalogi:**
+- `src/pipelines` — orkiestracja (entrypointy),
+- `src/etl/extraction` — ekstrakcja i odczyt danych (I/O),
+- `src/etl/transformations` — transformacje bez I/O,
+- `src/etl/validation` — walidacja kontraktów danych,
+- `src/etl/cleaning` — standaryzacja danych,
+- `src/etl/schema` — schematy danych,
+- `src/config` — konfiguracja i logowanie,
+- `src/utils` — narzędzia pomocnicze.
+
+**Zasady:**
+- pipeline jest jedynym entrypointem,
+- tylko pipeline wykonuje I/O i steruje kolejnością kroków,
+- moduły ETL są czyste, deterministyczne i testowalne,
+- brak efektów ubocznych przy imporcie.
+
+Projekt oparty jest o architekturę Medallion (Bronze / Silver / Gold)
+
+---
+
+## Konfiguracja i bezpieczeństwo
+
+- sekrety (np. FRED API Key) przechowywane w **Databricks Secrets**,
+- ścieżki i parametry w config ładowane przez `config_loader`,
+- zależności w pliku `requirements`.
 
 ---
 
@@ -245,20 +256,21 @@ Kod jest:
 ## Status projektu
 
 **Zrealizowane:**
-- struktura projektu,
-- konfiguracja i walidacje,
-- Silver layer dla ETF QQQ,
-- ekstrakcja danych makro z FRED API.
+- pipeline Silver dla ETF QQQ, (Bronze → Silver),
+- pipeline makroekonomiczny FRED (Bronze → Silver),
+- walidacje kontraktów danych,
+- czyszczenie i normalizacja,
+- deterministyczna orkiestracja,
+- rozdzielenie odpowiedzialności modułów.
 
 **W planach:**
-- transformacje Silver dla danych makro,
+- warstwa Gold (agregacje, analizy),
 - integracja newsów i danych geopolitycznych,
 - scoring sektorowy,
 - modele predykcyjne i AI-driven insights.
 
 ---
 
-## Uzyteczne linki
-
+## Linki
 - Invesco QQQ ETF constituents (CSV):  
   https://www.barchart.com/etfs-funds/quotes/QQQ/constituents
