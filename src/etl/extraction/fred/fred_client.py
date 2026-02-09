@@ -1,6 +1,7 @@
 import os
 import time
 import requests
+from xml.etree import ElementTree
 from datetime import datetime, timedelta
 from typing import Optional
 
@@ -39,7 +40,7 @@ class FredClient:
         if start_date:
             params["observation_start"] = start_date
 
-        query = "&".join(f"{k}={v}" for k, v in params.items())
+        query = "&".join(f"{key}={value}" for key, value in params.items())
         return f"{self.base_url}/series/observations?{query}"
 
     def _compute_start_date(self, refresh_window_months: int) -> str:
@@ -55,35 +56,40 @@ class FredClient:
         if not os.path.exists(path):
             return None
 
-        with open(path, "rb") as f:
-            content = f.read().decode("utf-8")
+        try:
+            tree = ElementTree.parse(path) #parsowanie do drzewa
+            root = tree.getroot() #pobranie korzenia
 
-        dates = []
-        for part in content.split("<date>")[1:]:
-            try:
-                d = part.split("</date>")[0].strip()
-                dates.append(datetime.strptime(d, "%Y-%m-%d"))
-            except Exception:
-                continue
+            dates = []
+            for obs in root.findall(".//observation"):
+                date_str = obs.attrib.get("date")
+                if date_str:
+                    dates.append(datetime.strptime(date_str, "%Y-%m-%d")) # dodaje daty do listy
 
-        return max(dates).strftime("%Y-%m-%d") if dates else None
+            if not dates:
+                return None
+
+            return max(dates).strftime("%Y-%m-%d") # zwraca najnowsza date
+
+        except Exception:
+            return None
 
     # ---------- public API ----------
 
     def download_series(self, series_id: str, refresh_window_months: int) -> str:
         logger.info(f"Downloading FRED series {series_id}")
 
-        last_date = self._last_loaded_date(series_id)
+        last_date = self._last_loaded_date(series_id) #najnowsza data pliku xml
 
-        if last_date:
-            last_dt = datetime.strptime(last_date, "%Y-%m-%d")
-            window_dt = datetime.utcnow() - timedelta(days=30 * refresh_window_months)
-            start_dt = max(last_dt + timedelta(days=1), window_dt)
+        if last_date: #jesli jest
+            last_dt = datetime.strptime(last_date, "%Y-%m-%d")#zmien na datetime
+            window_dt = datetime.utcnow() - timedelta(days=30 * refresh_window_months)#oblicz date 180 dni wstecz od dzis
+            start_dt = max(last_dt, window_dt) #wybierz najnowszą date spośród (od dzis 180 dni wstecz vs ostatnia data z pliku)
             start_date = start_dt.strftime("%Y-%m-%d")
         else:
-            start_date = None  # FULL HISTORY
+            start_date = None
 
-        url = self._build_observations_url(series_id, start_date)
+        url = self._build_observations_url(series_id, start_date)#buduje url i dopisuje start_date
 
         self._rate_limit()
         response = requests.get(url, timeout=30)

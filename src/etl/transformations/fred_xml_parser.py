@@ -34,7 +34,6 @@ class FredXMLParser:
             date_raw = obs.attrib.get("date")
             value_raw = obs.attrib.get("value")
 
-            # skip structurally invalid rows
             if not date_raw:
                 continue
 
@@ -43,8 +42,8 @@ class FredXMLParser:
             except ValueError:
                 continue
 
-            value = None
-            if value_raw not in (None, ".", ""):
+            value = None #ustawia value na nic
+            if value_raw not in (None, ".", ""):#jesli value nie jest puste zmienia . na nic
                 try:
                     value = float(value_raw)
                 except ValueError:
