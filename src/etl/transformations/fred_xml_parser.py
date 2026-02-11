@@ -7,10 +7,6 @@ from src.config.logger import get_logger
 logger = get_logger("fred_xml_parser")
 
 class FredXMLParser:
-    """
-    Pure parser.
-    XML (bytes / str) -> iterable of dicts
-    """
 
     @staticmethod
     def parse(
@@ -19,14 +15,6 @@ class FredXMLParser:
         unit: str | None = None,
         frequency: str | None = None,
     ) -> Iterable[Dict]:
-        """
-        Returns rows:
-        - indicator_id
-        - date
-        - value
-        - unit
-        - frequency
-        """
 
         root = ET.fromstring(xml_content)
 
@@ -42,8 +30,8 @@ class FredXMLParser:
             except ValueError:
                 continue
 
-            value = None #ustawia value na nic
-            if value_raw not in (None, ".", ""):#jesli value nie jest puste zmienia . na nic
+            value = None
+            if value_raw not in (None, ".", ""):
                 try:
                     value = float(value_raw)
                 except ValueError:

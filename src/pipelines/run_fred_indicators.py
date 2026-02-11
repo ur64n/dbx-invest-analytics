@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 from zoneinfo import ZoneInfo
 
 from pyspark.sql import SparkSession
@@ -13,11 +13,11 @@ from src.etl.extraction.fred.fred_run_metadata import FredRunMetadataWriter
 from src.etl.transformations.fred_xml_parser import FredXMLParser
 from src.etl.cleaning.fred_cleaning import FredCleaner
 from src.etl.validation.fred_validation import FredValidator
+from src.etl.write.FredSilverWriter import FredSilverWriter
 
 """ importy modulow uruchamiaja kod top-level, w importowanych modulach czyli wszystkie importy wszystko co jest poza definicją klasy """
 
 logger = get_logger("fred_pipeline")
-
 
 def run():
     logger.info("Starting FRED macro indicators pipeline")
@@ -32,10 +32,24 @@ def run():
 
     series_ids = config["fred"]["series_ids"]
     refresh_window_months = config["fred"]["window_refresh_months"]
+    silver_macro_indicators = config["tables"]["silver_macro_indicators"]
+    silver_macro_indicator_metadata = config["tables"]["silver_macro_indicator_metadata"]
 
     # ---------- extraction ----------
     fred_client = FredClient(config=config, api_key=fred_api_key) 
     metadata_writer = FredRunMetadataWriter(spark)
+    
+    exists = spark.catalog.tableExists(silver_macro_indicators)
+    has_data = (
+        exists 
+        and spark.table(silver_macro_indicators).limit(1).count() > 0
+    )
+    if not has_data:
+        observation_start = None 
+    else:
+        observation_start = (
+            datetime.utcnow() - timedelta(days=30 * refresh_window_months)
+        ).strftime("%Y-%m-%d")
 
     raw_xml_paths: list[tuple[str, str]] = []
 
@@ -45,7 +59,7 @@ def run():
 
             xml_path = fred_client.download_series(
                 series_id=series_id,
-                refresh_window_months=refresh_window_months,
+                observation_start=observation_start,
             )
 
             metadata_writer.write_success(
@@ -93,17 +107,25 @@ def run():
     # ---------- cleaning ----------
     cleaned_df = FredCleaner.clean(combined_df)
 
+    # ---------- enrichment ----------
+    
     # ---------- write SILVER ----------
-    logger.info("Writing SILVER fred_indicators table")
-
-    (
-        cleaned_df.write.format("delta")
-        .mode("overwrite")
-        .saveAsTable("silver.fred_indicators")
+    fred_writer = FredSilverWriter(
+        spark, 
+        table_name=silver_macro_indicators,
+        metadata_table_name=silver_macro_indicator_metadata
     )
 
-    logger.info("FRED pipeline finished successfully")
+    logger.info("Writing SILVER fred_indicators table")
 
+    if not has_data:
+        fred_writer.write_bootstrap(cleaned_df)
+    else:
+        fred_writer.write_refresh(cleaned_df)
+
+    fred_writer.create_indicator_metadata_table(cleaned_df)
+
+    logger.info("FRED pipeline finished successfully")
 
 if __name__ == "__main__":
     run()

@@ -15,6 +15,8 @@ tables:
   bronze_qqq: bronze.qqq_etf_constituents
   bronze_qqq_enriched: bronze.qqq_etf_entities_enriched
   silver_qqq: silver.qqq_silver_entities
+  silver_macro_indicators: silver.fred_indicators
+  silver_macro_indicator_metadata: silver.fred_macro_metadata_indicators
 
 # ---------- fred ----------
 fred:
@@ -29,4 +31,4 @@ fred:
     - INDPRO
     - T10YIE
   rate_limit_per_second: 2
-  window_refresh_months: 6
+  window_refresh_months: 12
