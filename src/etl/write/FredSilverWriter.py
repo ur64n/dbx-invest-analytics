@@ -42,18 +42,30 @@ class FredSilverWriter:
                 src.frequency
                 )
             """)
+
+    def insert_metadata_indicators(self, metadata_rows: list[dict]):
+        logger.info(f"Inserting metadata indicators")
         
-    def create_indicator_metadata_table(self, cleaned_df: DataFrame):
-        logger.info(f"Creating indicator metadata table")
-        
-        metadata_df = (
-            cleaned_df
-            .select("indicator_id").distinct()
-            .withColumn("unit", F.lit(None).cast("string"))
-            .withColumn("frequency", F.lit(None).cast("string"))
+        df = self.spark.createDataFrame(metadata_rows) \
+            .withColumn("indicator_id", F.lower(F.col("indicator_id")))
+        df.createOrReplaceTempView("metadata_source")
+
+        self.spark.sql(f"""
+            MERGE INTO {self.metadata_table_name} AS tgt
+            USING metadata_source AS src
+            ON tgt.indicator_id = src.indicator_id
+            WHEN MATCHED THEN UPDATE SET
+                tgt.unit = src.unit,
+                tgt.frequency = src.frequency
+            WHEN NOT MATCHED THEN INSERT (
+                indicator_id,
+                unit,
+                frequency
             )
-        
-        metadata_df.write.format("delta") \
-        .mode("overwrite") \
-        .saveAsTable(self.metadata_table_name)
+            VALUES (
+                src.indicator_id,
+                src.unit,
+                src.frequency
+                )
+            """)
 

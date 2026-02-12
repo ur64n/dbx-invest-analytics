@@ -10,13 +10,6 @@ from src.config.logger import get_logger
 logger = get_logger("fred_extraction")
 
 class FredClient:
-    """
-    Extraction-only client for FRED API.
-    Responsible ONLY for:
-    - calling API
-    - computing refresh window
-    - writing raw XML
-    """
 
     def __init__(self, config: dict, api_key: str):
         self.base_url = config["fred"]["base_url"]
@@ -46,6 +39,15 @@ class FredClient:
     def _raw_xml_path(self, series_id: str) -> str:
         return os.path.join(self.raw_path, f"{series_id}.xml")
     
+    def _build_series_metadata_url(self, series_id: str) -> str:
+        params = {
+            "series_id": series_id,
+            "file_type": "json",
+            "api_key": self.api_key,
+        }
+        query = "&".join(f"{key}={value}" for key, value in params.items())
+        return f"{self.base_url}/series?{query}"
+
     # ---------- public API ----------
 
     def download_series(self, series_id: str, observation_start: Optional[str]) -> str:
@@ -64,3 +66,25 @@ class FredClient:
         logger.info(f"Saved raw XML for {series_id} -> {xml_path}")
         return xml_path
 
+    def download_series_metadata(self, series_id: str) -> dict:
+        logger.info(f"Downloading FRED series metadata for {series_id}")
+        
+        url = self._build_series_metadata_url(series_id)
+        
+        self._rate_limit()
+        response = requests.get(url, timeout=30)
+        response.raise_for_status()
+
+        macro_metadata = response.json()
+
+        series_info = macro_metadata.get("seriess", [])
+        if not series_info:
+            return None
+
+        series_info = series_info[0]
+
+        return {
+            "indicator_id": series_info.get("id"),
+            "unit": series_info.get("units"),
+            "frequency": series_info.get("frequency")
+        }

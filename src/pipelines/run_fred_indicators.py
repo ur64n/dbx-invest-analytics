@@ -52,6 +52,7 @@ def run():
         ).strftime("%Y-%m-%d")
 
     raw_xml_paths: list[tuple[str, str]] = []
+    metadata_rows: list[dict[str, Optional[str]]] = []
 
     for series_id in series_ids:
         try:
@@ -62,6 +63,10 @@ def run():
                 observation_start=observation_start,
             )
 
+            macro_metadata = fred_client.download_series_metadata(
+                series_id=series_id
+            )
+
             metadata_writer.write_success(
                 series_id=series_id,
                 run_ts=run_ts,
@@ -69,6 +74,8 @@ def run():
             )
 
             raw_xml_paths.append((series_id, xml_path))
+            metadata_rows.append(macro_metadata)
+
 
         except Exception as e:
             logger.error(f"Extraction failed for {series_id}", exc_info=True)
@@ -77,6 +84,7 @@ def run():
                 run_ts=run_ts,
                 error_message=str(e),
             )
+    
 
     # ---------- transform ----------
     parser = FredXMLParser()
@@ -123,7 +131,7 @@ def run():
     else:
         fred_writer.write_refresh(cleaned_df)
 
-    fred_writer.create_indicator_metadata_table(cleaned_df)
+    fred_writer.insert_metadata_indicators(metadata_rows)
 
     logger.info("FRED pipeline finished successfully")
 
