@@ -2,8 +2,7 @@ from pyspark.sql import DataFrame
 from src.config.logger import get_logger
 from src.etl.validation.qqq_entities_validation import QQQEntitiesValidator
 
-logger = get_logger("enrichment")
-
+logger = get_logger("qqq-enrichment")
 
 class QQQEntitiesEnricher:
     """

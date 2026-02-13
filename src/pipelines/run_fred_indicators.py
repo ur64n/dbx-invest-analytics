@@ -14,6 +14,7 @@ from src.etl.transformations.fred_xml_parser import FredXMLParser
 from src.etl.cleaning.fred_cleaning import FredCleaner
 from src.etl.validation.fred_validation import FredValidator
 from src.etl.write.FredSilverWriter import FredSilverWriter
+from src.etl.enrichment.fred_indicator_enrichment import FredIndicatorEnricher
 
 """ importy modulow uruchamiaja kod top-level, w importowanych modulach czyli wszystkie importy wszystko co jest poza definicją klasy """
 
@@ -114,8 +115,6 @@ def run():
 
     # ---------- cleaning ----------
     cleaned_df = FredCleaner.clean(combined_df)
-
-    # ---------- enrichment ----------
     
     # ---------- write SILVER ----------
     fred_writer = FredSilverWriter(
@@ -132,6 +131,10 @@ def run():
         fred_writer.write_refresh(cleaned_df)
 
     fred_writer.insert_metadata_indicators(metadata_rows)
+
+    # ---------- enrichment ----------
+    metadata_df = spark.table(silver_macro_indicator_metadata)
+    enriched_df = FredIndicatorEnricher.enrich(cleaned_df, metadata_df)
 
     logger.info("FRED pipeline finished successfully")
 
