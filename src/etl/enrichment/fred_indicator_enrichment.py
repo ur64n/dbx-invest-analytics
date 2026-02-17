@@ -6,10 +6,17 @@ logger = get_logger("fred-enrichment")
 class FredIndicatorEnricher:
 
     @staticmethod
-    def enrich(indicator_df: DataFrame, metadata_df: DataFrame) -> DataFrame:
+    def enrich(fact_df: DataFrame, dim_metadata_df: DataFrame) -> DataFrame:
         logger.info("Start enriching Fred indicators")
-        
-        return(
-            indicator_df
-            .join(metadata_df, on="indicator_id", how="left")
+
+        return (
+            fact_df.alias("f")
+            .join(dim_metadata_df.alias("d"), on="indicator_id", how="left")
+            .select(
+                "f.indicator_id",
+                "f.date",
+                "f.value",
+                "d.unit",
+                "d.frequency"
+            )
         )

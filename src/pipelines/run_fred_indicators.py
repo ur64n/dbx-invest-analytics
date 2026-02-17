@@ -1,5 +1,6 @@
 from datetime import datetime, timedelta
 from zoneinfo import ZoneInfo
+from pyspark.sql.functions import col
 
 from pyspark.sql import SparkSession
 from pyspark.dbutils import DBUtils
@@ -8,12 +9,16 @@ from src.config.logger import get_logger
 from src.config.config_loader import load_config
 
 from src.etl.schema.fred_schema import fred_schema
+from src.etl.schema.fred_metadata_schema import fred_metadata_schema
 from src.etl.extraction.fred.fred_client import FredClient
 from src.etl.extraction.fred.fred_run_metadata import FredRunMetadataWriter
 from src.etl.transformations.fred_xml_parser import FredXMLParser
 from src.etl.cleaning.fred_cleaning import FredCleaner
+from src.etl.cleaning.fred_metadata_cleaning import FredMetadataCleaner
 from src.etl.validation.fred_validation import FredValidator
+from src.etl.validation.fred_metadata_validation import FredMetadataValidator
 from src.etl.write.FredSilverWriter import FredSilverWriter
+from src.etl.write.FredMetadataWriter import FredMetadataWriter
 from src.etl.enrichment.fred_indicator_enrichment import FredIndicatorEnricher
 
 """ importy modulow uruchamiaja kod top-level, w importowanych modulach czyli wszystkie importy wszystko co jest poza definicją klasy """
@@ -77,7 +82,6 @@ def run():
             raw_xml_paths.append((series_id, xml_path))
             metadata_rows.append(macro_metadata)
 
-
         except Exception as e:
             logger.error(f"Extraction failed for {series_id}", exc_info=True)
             metadata_writer.write_failure(
@@ -85,7 +89,6 @@ def run():
                 run_ts=run_ts,
                 error_message=str(e),
             )
-    
 
     # ---------- transform ----------
     parser = FredXMLParser()
@@ -106,35 +109,54 @@ def run():
         raise RuntimeError("No FRED data extracted - pipeline stopped")
 
     combined_df = spark.createDataFrame(rows, schema=fred_schema) # xml -> df
+    fred_metadata = spark.createDataFrame(metadata_rows, schema=fred_metadata_schema)
 
-    # ---------- validation ----------
+    # ---------- fact validation ----------
     FredValidator.validate_schema(combined_df)
     FredValidator.validate_not_empty(combined_df)
-    FredValidator.validate_domain_rules(combined_df)
-    FredValidator.validate_uniqueness(combined_df)
 
-    # ---------- cleaning ----------
+    # ---------- fact cleaning ----------
     cleaned_df = FredCleaner.clean(combined_df)
-    
-    # ---------- write SILVER ----------
-    fred_writer = FredSilverWriter(
+
+    # ---------- fact domain validation ----------
+    FredValidator.validate_domain_rules(cleaned_df)
+    FredValidator.validate_uniqueness(cleaned_df)
+
+    # ---------- metadata validation ---------
+    FredMetadataValidator.validate_metadata_schema(fred_metadata)
+
+    # ---------- metadata cleaning ----------
+    cleaned_metadata_df = FredMetadataCleaner.clean_metadata(fred_metadata)
+
+    # ---------- metadata domain validation ---------
+    FredMetadataValidator.validate_metadata_schema(cleaned_metadata_df)
+    FredMetadataValidator.validate_metadata_key_uniqueness(cleaned_metadata_df)
+    FredMetadataValidator.validate_cannonical_frequency(cleaned_metadata_df)
+
+    # ---------- write metadata ----------
+    metadata_writer = FredMetadataWriter(
         spark, 
-        table_name=silver_macro_indicators,
         metadata_table_name=silver_macro_indicator_metadata
     )
 
-    logger.info("Writing SILVER fred_indicators table")
-
-    if not has_data:
-        fred_writer.write_bootstrap(cleaned_df)
-    else:
-        fred_writer.write_refresh(cleaned_df)
-
-    fred_writer.insert_metadata_indicators(metadata_rows)
+    metadata_writer.merge(cleaned_metadata_df)
 
     # ---------- enrichment ----------
     metadata_df = spark.table(silver_macro_indicator_metadata)
     enriched_df = FredIndicatorEnricher.enrich(cleaned_df, metadata_df)
+
+    # ---------- write enriched SILVER ----------
+    fred_writer = FredSilverWriter(
+        spark, 
+        table_name=silver_macro_indicators
+    )
+
+    logger.info("Writing SILVER fred_indicators enriched table")
+
+    if not has_data:
+        fred_writer.write_bootstrap(enriched_df)
+    else:
+        fred_writer.write_refresh(enriched_df)
 
     logger.info("FRED pipeline finished successfully")
 

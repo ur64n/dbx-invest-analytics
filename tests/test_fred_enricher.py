@@ -1,37 +1,48 @@
 import pytest
+from datetime import date
 from src.etl.enrichment.fred_indicator_enrichment import FredIndicatorEnricher
 
 def test_enrich(spark):
 
-    # Fake values for indicator_df
+    # --- fake fact data ---
     indicators_data = [
-        ("cpi", "2024-01-01", 3.0),
-        ("unrate", "2024-01-01", 5.0),
+        ("cpi", date(2024, 1, 1), 3.0),
+        ("unrate", date(2024, 1, 1), 5.0),
     ]
-    
-    # Creates df based on the above fake values
+
     indicator_df = spark.createDataFrame(
         indicators_data,
         ["indicator_id", "date", "value"]
     )
 
-    # Fake metadata values for indicator_df
+    # --- fake metadata data ---
     metadata_data = [
-        ("cpi", "percent", "monthly")
+        ("cpi", "percent", "m")
     ]
-    
-    # Creates df based on the above fake values
+
     metadata_df = spark.createDataFrame(
         metadata_data,
         ["indicator_id", "unit", "frequency"]
     )
 
-    # run real enrich function on fake created dataframes above
-
+    # --- run enrichment ---
     result_df = FredIndicatorEnricher.enrich(indicator_df, metadata_df)
 
-    result = {row.indicator_id: row.unit for row in result_df.collect()}
+    # --- assert schema contract ---
+    assert result_df.columns == [
+        "indicator_id",
+        "date",
+        "value",
+        "unit",
+        "frequency",
+    ]
 
-    assert result["cpi"] == "percent"
-    assert result["unrate"] is None
+    result = {row.indicator_id: row for row in result_df.collect()}
 
+    # --- matched case ---
+    assert result["cpi"].unit == "percent"
+    assert result["cpi"].frequency == "m"
+
+    # --- unmatched case (left join) ---
+    assert result["unrate"].unit is None
+    assert result["unrate"].frequency is None

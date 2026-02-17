@@ -68,9 +68,9 @@ class FredClient:
 
     def download_series_metadata(self, series_id: str) -> dict:
         logger.info(f"Downloading FRED series metadata for {series_id}")
-        
+
         url = self._build_series_metadata_url(series_id)
-        
+
         self._rate_limit()
         response = requests.get(url, timeout=30)
         response.raise_for_status()

@@ -12,8 +12,6 @@ class FredXMLParser:
     def parse(
         xml_content: bytes,
         indicator_id: str,
-        unit: str | None = None,
-        frequency: str | None = None,
     ) -> Iterable[Dict]:
 
         root = ET.fromstring(xml_content)
@@ -41,6 +39,4 @@ class FredXMLParser:
                 "indicator_id": indicator_id,
                 "date": date,
                 "value": value,
-                "unit": unit,
-                "frequency": frequency,
             }

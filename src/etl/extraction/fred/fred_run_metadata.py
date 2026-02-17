@@ -11,15 +11,10 @@ from src.config.logger import get_logger
 logger = get_logger("fred_run_metadata")
 
 class FredRunMetadataWriter:
-    """
-    Writes metadata about each FRED extraction run.
-    No business logic, no validation.
-    """
 
     def __init__(self, spark: SparkSession):
         self.spark = spark
         self.table_name = "bronze.fred_run_metadata"
-
         self.schema = StructType([
             StructField("series_id", StringType(), False),
             StructField("run_ts", TimestampType(), False),

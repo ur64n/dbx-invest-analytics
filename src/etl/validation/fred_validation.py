@@ -5,7 +5,6 @@ from pyspark.sql.functions import current_date
 
 logger = get_logger("fred_validation")
 
-
 class FredValidator:
 
     REQUIRED_COLUMNS = {

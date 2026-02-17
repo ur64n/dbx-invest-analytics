@@ -10,14 +10,7 @@ from src.config.logger import get_logger
 
 logger = get_logger("fred_cleaning")
 
-
 class FredCleaner:
-    """
-    Cleaning only.
-    - no IO
-    - no writes
-    - DataFrame -> DataFrame
-    """
 
     @staticmethod
     def clean(df: DataFrame) -> DataFrame:
