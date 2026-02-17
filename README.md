@@ -72,6 +72,12 @@ Status:
   - revisions from the last **6 months**,
   - overwrite Bronze files per indicator,
 - parsing, validation, normalization, and persistence are handled in the **Silver layer**.
+- Extraction of metadata (unit and frequency) in json format.
+- Transformation of metadata to dataframe, standardization, and validation.
+- Synchronization of metadata (UPSERT)
+- Enrichment of fact tables with metadata (JOIN)
+- Canonization of indicator_id key (lower+trim)
+- Canonization of frequency daily, monthly, quarterly, annual -> (d, m, q, a)
 
 ---
 
@@ -82,12 +88,14 @@ The project follows a **Modular Python Project Structure** with clear responsibi
 **Main directories:**
 - `src/pipelines` — orchestration (entrypoints),
 - `src/etl/extraction` — data extraction and reading (I/O),
+-  `src/etl/enrichment` — data enrichment and merging,
 - `src/etl/transformations` — transformations without I/O,
 - `src/etl/validation` — data contract validation,
 - `src/etl/cleaning` — data standardization,
 - `src/etl/schema` — data schemas,
 - `src/config` — configuration and logging,
-- `src/utils` — helper utilities.
+- `src/utils` — helper utilities,
+- `tests/` — unit tests.
 
 **Principles:**
 - the pipeline is the only entrypoint,
@@ -118,7 +126,7 @@ The project is based on the Medallion architecture (Bronze / Silver / Gold).
 
 **Completed:**
 - Silver pipeline for ETF QQQ (Bronze → Silver),
-- macroeconomic FRED pipeline (Bronze → Silver),
+- macroeconomic FRED pipeline + metadata (Bronze → Silver),
 - data contract validations,
 - data cleaning and normalization,
 - deterministic orchestration,
@@ -188,7 +196,7 @@ Plik źródłowy ETF QQQ musi być pobierany **ręcznie** i umieszczony w:
 
 ### 2. Dane makroekonomiczne - FRED API
 
-Dane makroekonomiczne pobierane są z **FRED API** w formacie XML.
+Dane makroekonomiczne pobierane są iteracyjnie z **FRED API** w formacie XML.
 
 Aktualnie wykorzystywane wskaźniki:
 - **CPIAUCSL** – inflacja (CPI)
@@ -208,9 +216,15 @@ Status:
 - pierwszy run pobiera pełną historię źródła,
 - kolejne runy działają **inkrementacyjnie** i odświeżają:
   - nowe dane,
-  - rewizje z ostatnich **6 miesięcy**.
+  - rewizje z ostatnich **12 miesięcy**.
   - nadpisują pliki w warstwie Bronze per wskaźnik,
 - parsowanie, walidacja, normalizacja i zapis realizowane w warstwie **Silver**.
+- Extrakcja metadanych (unit i frequency) w formacie json.
+- Transformacja metadanych do dataframe, standaryzacja i walidacja.
+- Synchronizacja metadanych (UPSERT)
+- Wzbogacenie tabeli faktów o metadane (JOIN)
+- Kanonizacja klucza indicator_id (lower+trim)
+- Kanonizacja frequency daily,monthly,quarterly,annual -> (d,m,q,a)
 
 ---
 
@@ -221,12 +235,14 @@ Projekt wykorzystuje **Modular Python Project Structure** z kontraktami odpowied
 **Główne katalogi:**
 - `src/pipelines` — orkiestracja (entrypointy),
 - `src/etl/extraction` — ekstrakcja i odczyt danych (I/O),
+- `src/etl/enrichment` — wzbogacenie i złączenia danych,
 - `src/etl/transformations` — transformacje bez I/O,
 - `src/etl/validation` — walidacja kontraktów danych,
 - `src/etl/cleaning` — standaryzacja danych,
 - `src/etl/schema` — schematy danych,
 - `src/config` — konfiguracja i logowanie,
-- `src/utils` — narzędzia pomocnicze.
+- `src/utils` — narzędzia pomocnicze,
+- `tests/` — testy jednostkowe.
 
 **Zasady:**
 - pipeline jest jedynym entrypointem,
@@ -257,7 +273,7 @@ Projekt oparty jest o architekturę Medallion (Bronze / Silver / Gold)
 
 **Zrealizowane:**
 - pipeline Silver dla ETF QQQ, (Bronze → Silver),
-- pipeline makroekonomiczny FRED (Bronze → Silver),
+- pipeline makroekonomiczny FRED + metadane (Bronze → Silver),
 - walidacje kontraktów danych,
 - czyszczenie i normalizacja,
 - deterministyczna orkiestracja,
