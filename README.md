@@ -144,6 +144,8 @@ The project is based on the Medallion architecture (Bronze / Silver / Gold).
 
 - Invesco QQQ ETF constituents (CSV):  
   https://www.barchart.com/etfs-funds/quotes/QQQ/constituents
+- yfinance (download) docs
+  https://ranaroussi.github.io/yfinance/reference/api/yfinance.download.html#yfinance.download
 
 # dbx-invest-analytics PL
 
@@ -290,3 +292,6 @@ Projekt oparty jest o architekturę Medallion (Bronze / Silver / Gold)
 ## Linki
 - Invesco QQQ ETF constituents (CSV):  
   https://www.barchart.com/etfs-funds/quotes/QQQ/constituents
+  
+- yfinance (download) dokumentacja
+  https://ranaroussi.github.io/yfinance/reference/api/yfinance.download.html#yfinance.download
