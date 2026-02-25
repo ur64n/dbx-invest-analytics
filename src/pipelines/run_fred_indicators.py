@@ -60,7 +60,7 @@ def run():
     raw_xml_paths: list[tuple[str, str]] = []
     metadata_rows: list[dict[str, Optional[str]]] = []
 
-    for series_id in series_ids:
+    for series_id in series_ids: #TODO: Move iteration to extractor
         try:
             logger.info(f"Extracting series {series_id}")
 

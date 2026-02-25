@@ -1,22 +1,25 @@
 # ---------- environment ----------
 env: dev # Jawne srodowisko
 
-# ---------- paths ----------
+# ---------- raw file paths ----------
 paths:
   raw_csv: /Volumes/workspace/bronze/raw/           
-  raw_macro: /Volumes/workspace/bronze/raw/macro/   
+  raw_macro: /Volumes/workspace/bronze/raw/macro/
 
 # ---------- filenames ----------
 files:
-  qqq_entities: qqq-etf-constituents.csv 
+  qqq_entities: qqq-etf-constituents.csv
 
 # ---------- tables ----------
 tables:
   bronze_qqq: bronze.qqq_etf_constituents
   bronze_qqq_enriched: bronze.qqq_etf_entities_enriched
+  bronze_ohlcv: bronze.ohlcv_indicators
   silver_qqq: silver.qqq_silver_entities
   silver_macro_indicators: silver.fred_indicators
   silver_macro_indicator_metadata: silver.fred_macro_metadata_indicators
+  silver_ohlcv: silver.ohlcv_indicators
+
 
 # ---------- fred ----------
 fred:
@@ -31,4 +34,9 @@ fred:
     - INDPRO
     - T10YIE
   rate_limit_per_second: 2
+  window_refresh_months: 12
+
+# ---------- yfinance ----------
+yfinance:
+  start_date: 2010-01-01
   window_refresh_months: 12

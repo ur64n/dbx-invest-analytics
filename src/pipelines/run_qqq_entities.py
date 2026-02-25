@@ -1,3 +1,5 @@
+#TODO: Prześledzić i poprawić kontrakty (writer)
+
 from pyspark.sql import SparkSession
 from src.config.logger import get_logger
 from src.config.config_loader import load_config
@@ -12,10 +14,11 @@ from src.etl.extraction.qqq_categories_extraction import QQQCategoriesExtractor
 
 logger = get_logger("pipeline")
 
-def run(env: str = "dev"): # Wybiera config dla dev na podstawie zmiennej
+def run(env: str = "dev"):
+
     # ---------- setup ----------
-    spark = SparkSession.builder.getOrCreate() # Wybiera istniejącą, lub tworzy nową sesję sparka
-    cfg = load_config(env) # Wczytuje config dla srodowiska "dev", który jest uniwersalny, wystarczy zmienić parametr na env = "test", aby uruchomić z configiem test.yaml, lub prod.
+    spark = SparkSession.builder.getOrCreate() 
+    cfg = load_config(env)
 
     # ---------- extraction ----------
     extractor = QQQCSVExtractor(
@@ -38,7 +41,7 @@ def run(env: str = "dev"): # Wybiera config dla dev na podstawie zmiennej
     # ---------- enrichment ----------
     symbols = [r.symbol for r in bronze_df.select("symbol").distinct().collect()]
 
-    category_df = QQQCategoriesExtractor(spark).extract(symbols) # extrakcja przyjmuje sesje spark
+    category_df = QQQCategoriesExtractor(spark).extract(symbols)
     enriched_df = QQQEntitiesEnricher.enrich(bronze_df, category_df)
 
     enriched_df.write.format("delta").mode("overwrite").saveAsTable(
@@ -49,6 +52,7 @@ def run(env: str = "dev"): # Wybiera config dla dev na podstawie zmiennej
     silver_df = QQQEntitiesCleaner.clean_columns(enriched_df)
     silver_df = QQQEntitiesCleaner.clean_rows(silver_df)
 
+    # ---------- write SILVER ----------
     silver_df.write.format("delta").mode("overwrite").saveAsTable(
         cfg["tables"]["silver_qqq"]
     )

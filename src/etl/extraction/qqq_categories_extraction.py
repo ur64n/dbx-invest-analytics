@@ -5,7 +5,6 @@ from src.config.logger import get_logger
 
 logger = get_logger("qqq_categories_extraction")
 
-
 class QQQCategoriesExtractor:
     """
     Extraction layer for QQQ categories using yfinance.
