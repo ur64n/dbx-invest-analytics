@@ -108,8 +108,9 @@ def run():
     if not rows:
         raise RuntimeError("No FRED data extracted - pipeline stopped")
 
+    # ---------- spark_df ----------
     combined_df = spark.createDataFrame(rows, schema=fred_schema) # xml -> df
-    fred_metadata = spark.createDataFrame(metadata_rows, schema=fred_metadata_schema)
+    fred_metadata = spark.createDataFrame(metadata_rows, schema=fred_metadata_schema) # metadata unit frequency df 
 
     # ---------- fact validation ----------
     FredValidator.validate_schema(combined_df)
@@ -117,7 +118,7 @@ def run():
 
     # ---------- fact cleaning ----------
     cleaned_df = FredCleaner.clean(combined_df)
-
+    
     # ---------- fact domain validation ----------
     FredValidator.validate_domain_rules(cleaned_df)
     FredValidator.validate_uniqueness(cleaned_df)
@@ -143,9 +144,10 @@ def run():
 
     # ---------- enrichment ----------
     metadata_df = spark.table(silver_macro_indicator_metadata)
+
     enriched_df = FredIndicatorEnricher.enrich(cleaned_df, metadata_df)
 
-    # ---------- write enriched SILVER ----------
+# ---------- write enriched SILVER ----------
     fred_writer = FredSilverWriter(
         spark, 
         table_name=silver_macro_indicators

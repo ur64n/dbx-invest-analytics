@@ -41,7 +41,7 @@ def run(env: str = "dev"):
     # ---------- enrichment ----------
     symbols = [r.symbol for r in bronze_df.select("symbol").distinct().collect()]
 
-    category_df = QQQCategoriesExtractor(spark).extract(symbols)
+    category_df = QQQCategoriesExtractor(spark).extract(symbols) #ile symboli jest po ekstrakcji?
     enriched_df = QQQEntitiesEnricher.enrich(bronze_df, category_df)
 
     enriched_df.write.format("delta").mode("overwrite").saveAsTable(

@@ -11,8 +11,6 @@ class FredValidator:
         "indicator_id",
         "date",
         "value",
-        "unit",
-        "frequency",
     }
 
     @staticmethod

@@ -7,9 +7,6 @@ logger = get_logger("qqq_csv_extraction")
 
 
 class QQQCSVExtractor:
-    """
-    Responsible only for reading raw CSV files.
-    """
 
     def __init__(
         self, 

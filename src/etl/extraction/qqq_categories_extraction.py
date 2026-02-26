@@ -6,10 +6,6 @@ from src.config.logger import get_logger
 logger = get_logger("qqq_categories_extraction")
 
 class QQQCategoriesExtractor:
-    """
-    Extraction layer for QQQ categories using yfinance.
-    IO allowed here.
-    """
 
     def __init__(self, spark: SparkSession):
         self.spark = spark
@@ -43,4 +39,5 @@ class QQQCategoriesExtractor:
         category_df = self.spark.createDataFrame(rows, schema)
 
         logger.info("Category extraction finished")
+
         return category_df

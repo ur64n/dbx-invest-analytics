@@ -61,9 +61,10 @@ class FredClient:
 
         xml_path = self._raw_xml_path(series_id)
         with open(xml_path, "wb") as f:
-            f.write(response.content)
+            f.write(response.content) # save xml files to bronze workspace
 
         logger.info(f"Saved raw XML for {series_id} -> {xml_path}")
+
         return xml_path
 
     def download_series_metadata(self, series_id: str) -> dict:

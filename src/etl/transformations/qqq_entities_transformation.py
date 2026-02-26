@@ -6,10 +6,6 @@ from pyspark.sql.functions import lower, col
 logger = get_logger("transformation")
 
 class QQQEntitiesTransformer:
-    """
-    Pure transformation logic.
-    DataFrame -> DataFrame
-    """
 
     @staticmethod
     def transform_raw(df: DataFrame) -> DataFrame:

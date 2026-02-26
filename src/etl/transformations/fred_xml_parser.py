@@ -9,10 +9,7 @@ logger = get_logger("fred_xml_parser")
 class FredXMLParser:
 
     @staticmethod
-    def parse(
-        xml_content: bytes,
-        indicator_id: str,
-    ) -> Iterable[Dict]:
+    def parse(xml_content: bytes, indicator_id: str) -> Iterable[Dict]:
 
         root = ET.fromstring(xml_content)
 

@@ -21,17 +21,6 @@ class FredCleaner:
             lower(trim(col("indicator_id"))).alias("indicator_id"),
             to_date(col("date")).alias("date"),
             col("value").cast("double").alias("value"),
-            lower(trim(col("unit"))).alias("unit"),
-            lower(trim(col("frequency"))).alias("frequency"),
-        )
-
-        # --- value normalization ---
-        df = df.withColumn(
-            "frequency",
-            regexp_replace(col("frequency"), "monthly", "m"),
-        ).withColumn(
-            "frequency",
-            regexp_replace(col("frequency"), "daily", "d"),
         )
 
         logger.info("FRED cleaning finished")
