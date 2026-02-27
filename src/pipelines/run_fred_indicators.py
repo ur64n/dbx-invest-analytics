@@ -21,8 +21,6 @@ from src.etl.write.FredSilverWriter import FredSilverWriter
 from src.etl.write.FredMetadataWriter import FredMetadataWriter
 from src.etl.enrichment.fred_indicator_enrichment import FredIndicatorEnricher
 
-""" importy modulow uruchamiaja kod top-level, w importowanych modulach czyli wszystkie importy wszystko co jest poza definicją klasy """
-
 logger = get_logger("fred_pipeline")
 
 def run():
@@ -57,8 +55,15 @@ def run():
             datetime.utcnow() - timedelta(days=30 * refresh_window_months)
         ).strftime("%Y-%m-%d")
 
+    logger.info(
+        f"Extraction mode: {'BOOTSTRAP' if not has_data else 'REFRESH'} | "
+        f"Observation start = {observation_start}"
+    )
+
     raw_xml_paths: list[tuple[str, str]] = []
     metadata_rows: list[dict[str, Optional[str]]] = []
+
+    logger.info(f"Starting extraction for {len(series_ids)} series")
 
     for series_id in series_ids: #TODO: Move iteration to extractor
         try:
@@ -73,6 +78,11 @@ def run():
                 series_id=series_id
             )
 
+            if macro_metadata is None:
+                logger.warning(f"No metadata returned for {series_id} - skipping metadata append")
+            else:
+                metadata_rows.append(macro_metadata)
+
             metadata_writer.write_success(
                 series_id=series_id,
                 run_ts=run_ts,
@@ -80,7 +90,7 @@ def run():
             )
 
             raw_xml_paths.append((series_id, xml_path))
-            metadata_rows.append(macro_metadata)
+
 
         except Exception as e:
             logger.error(f"Extraction failed for {series_id}", exc_info=True)
@@ -89,6 +99,22 @@ def run():
                 run_ts=run_ts,
                 error_message=str(e),
             )
+
+    logger.info(
+    f"Extraction finished | "
+    f"successful_series={len(raw_xml_paths)} | "
+    f"metadata_rows={len(metadata_rows)}"
+    )
+
+    success_count = len(raw_xml_paths)
+    failure_count = len(series_ids) - success_count
+
+    logger.info(
+        f"FRED extraction summary | "
+        f"total={len(series_ids)} | "
+        f"success={success_count} | "
+        f"failure={failure_count}"
+    )
 
     # ---------- transform ----------
     parser = FredXMLParser()
@@ -108,10 +134,10 @@ def run():
     if not rows:
         raise RuntimeError("No FRED data extracted - pipeline stopped")
 
-    # ---------- spark_df ----------
-    combined_df = spark.createDataFrame(rows, schema=fred_schema) # xml -> df
+    # ---------- spark_df ---------- 
+    combined_df = spark.createDataFrame(rows, schema=fred_schema) # dict -> df
     fred_metadata = spark.createDataFrame(metadata_rows, schema=fred_metadata_schema) # metadata unit frequency df 
-
+    
     # ---------- fact validation ----------
     FredValidator.validate_schema(combined_df)
     FredValidator.validate_not_empty(combined_df)
@@ -147,7 +173,7 @@ def run():
 
     enriched_df = FredIndicatorEnricher.enrich(cleaned_df, metadata_df)
 
-# ---------- write enriched SILVER ----------
+    # ---------- write enriched SILVER ----------
     fred_writer = FredSilverWriter(
         spark, 
         table_name=silver_macro_indicators

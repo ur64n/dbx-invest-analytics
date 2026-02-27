@@ -28,7 +28,7 @@ class FredMetadataValidator:
             raise ValueError("indicator_id contains NULL")
 
         if df.filter(col("unit").isNull()).count() > 0:
-                    raise ValueError("unit contains NULL")
+            raise ValueError("unit contains NULL")
 
         if df.filter(col("frequency").isNull()).count() > 0:
             raise ValueError("frequency contains NULL")

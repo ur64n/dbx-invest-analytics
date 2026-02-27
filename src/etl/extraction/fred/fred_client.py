@@ -56,6 +56,9 @@ class FredClient:
         url = self._build_observations_url(series_id, observation_start)
 
         self._rate_limit()
+
+        logger.info(f"Requesting URL: {url}")
+
         response = requests.get(url, timeout=30)
         response.raise_for_status()
 
@@ -80,6 +83,7 @@ class FredClient:
 
         series_info = macro_metadata.get("seriess", [])
         if not series_info:
+            logger.warning(f"No metadata returned for {series_id}")
             return None
 
         series_info = series_info[0]

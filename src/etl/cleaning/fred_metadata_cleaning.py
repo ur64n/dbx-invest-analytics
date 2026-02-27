@@ -10,7 +10,6 @@ from src.config.logger import get_logger
 
 logger = get_logger("fred_metadata_cleaning")
 
-
 class FredMetadataCleaner:
 
     @staticmethod

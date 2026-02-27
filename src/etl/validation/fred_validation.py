@@ -15,9 +15,10 @@ class FredValidator:
 
     @staticmethod
     def validate_schema(df: DataFrame) -> None:
-        logger.info("Validating FRED schema")
+        logger.info(f"Validating FRED schema | columns = {df.columns}")
 
         missing = FredValidator.REQUIRED_COLUMNS - set(df.columns)
+
         if missing:
             raise ValueError(f"Missing required columns: {missing}")
 
@@ -25,12 +26,12 @@ class FredValidator:
     def validate_not_empty(df: DataFrame) -> None:
         logger.info("Validating FRED dataset not empty")
 
-        if df.count() == 0:
+        if df.limit(1).count() == 0:
             raise ValueError("FRED dataset is empty")
 
     @staticmethod
     def validate_domain_rules(df: DataFrame) -> None:
-        logger.info("Validating FRED domain rules")
+        logger.info("Validating domain rules (indicator_id, date, value)")
 
         # indicator_id not null
         if df.filter(col("indicator_id").isNull()).count() > 0:

@@ -10,14 +10,23 @@ class FredSilverWriter:
         self.table_name = table_name
 
     def write_bootstrap(self, df: DataFrame):
-        logger.info(f"Bootstrap SILVER table")
+
+        row_count = df.count()
+        
+        logger.info(f"Bootstrap SILVER table rows = {row_count}")
 
         df.write.format("delta") \
         .mode("overwrite") \
         .saveAsTable(self.table_name)
 
     def write_refresh(self, df: DataFrame):
-        logger.info(f"Merging into SILVER fred_indicators")
+        """
+        Upsert refreshed/revision data into the silver table from last year
+        """
+
+        row_count = df.count()
+
+        logger.info(f"Refreshing SILVER table | merge_source_rows = {row_count}")
 
         df.createOrReplaceTempView("fred_source")
 

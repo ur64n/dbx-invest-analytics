@@ -21,14 +21,20 @@ class FredRunMetadataWriter:
             StructField("status", StringType(), False),
             StructField("xml_path", StringType(), True),
             StructField("error_message", StringType(), True),
-        ]) #create schema, empty table
+        ])
+
+        if not self.spark.catalog.tableExists(self.table_name):
+            logger.info(f"Creating metadata table {self.table_name}")
+            empty_df = self.spark.createDataFrame([], self.schema)
+            empty_df.write.format("delta").mode("overwrite").saveAsTable(self.table_name)
 
     def _write(self, row: dict):
+
         df = self.spark.createDataFrame([row], schema=self.schema)
         (df.write.format("delta").mode("append").saveAsTable(self.table_name))
 
     def write_success(self, series_id: str, run_ts, xml_path: str):
-        logger.info(f"Recording SUCCESS for {series_id}")
+        logger.info(f"Start writing pipeline run metadata for {series_id}")
 
         self._write({
             "series_id": series_id,
@@ -39,7 +45,7 @@ class FredRunMetadataWriter:
         })
 
     def write_failure(self, series_id: str, run_ts, error_message: str):
-        logger.warning(f"Recording FAILURE for {series_id}")
+        logger.warning(f"Recording FAILURE for {series_id} | error={error_message}")
 
         self._write({
             "series_id": series_id,
