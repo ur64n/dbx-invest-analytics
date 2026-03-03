@@ -6,7 +6,7 @@ from pyspark.sql.functions import current_date
 logger = get_logger("fred_validation")
 
 class FredValidator:
-
+    #TODO: przeniesc do pliku schema
     REQUIRED_COLUMNS = {
         "indicator_id",
         "date",
@@ -15,7 +15,7 @@ class FredValidator:
 
     @staticmethod
     def validate_schema(df: DataFrame) -> None:
-        logger.info(f"Validating FRED schema | columns = {df.columns}")
+        logger.info(f"Validating FRED required columns")
 
         missing = FredValidator.REQUIRED_COLUMNS - set(df.columns)
 

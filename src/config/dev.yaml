@@ -20,7 +20,6 @@ tables:
   silver_macro_indicator_metadata: silver.fred_macro_metadata_indicators
   silver_ohlcv: silver.ohlcv_indicators
 
-
 # ---------- fred ----------
 fred:
   base_url: https://api.stlouisfed.org/fred

@@ -1,18 +1,16 @@
-
-#TODO: 1. Dodać metadane pipeline tak jak w fred. 2. Dodać testy 3. Na podstawie pliku i EDA z notebooks zrobić dalszy ciąg pipeline doprowadzając dane do warstwy silver.
-
 from pyspark.sql import SparkSession
 from pyspark.sql.functions import max as spark_max
 
 from src.config.config_loader import load_config
 from src.config.logger import get_logger
+
 from src.etl.extraction.yahoo_finance.yahoo_ohlcv_extractor import download_ohlcv
 from src.etl.cleaning.ohlcv_cleaning import OHLCVCleaner
 from src.etl.write.ohlcvWriter import OHLCVWriter
 
 from datetime import datetime, timedelta, UTC
 
-logger = get_logger("ohlcv_pipeline")
+logger = get_logger("ohlcv_bronze_pipeline")
 
 def run():
     logger.info("Starting OHLCV indicators pipeline")
