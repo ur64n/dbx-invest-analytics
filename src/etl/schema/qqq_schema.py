@@ -6,3 +6,15 @@ qqq_schema = StructType([
     StructField("% Holding", StringType(), True),
     StructField("Shares", StringType(), True)
 ])
+
+required_columns = {
+    "Symbol",
+    "Name",
+    "% Holding"
+}
+
+not_null_columns = [
+    "symbol",
+    "name",
+    "precent_holding"
+]

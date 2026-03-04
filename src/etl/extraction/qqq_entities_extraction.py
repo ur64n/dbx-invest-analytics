@@ -5,7 +5,6 @@ from src.etl.extraction.file_utils import list_files, normalize_filename
 
 logger = get_logger("qqq_csv_extraction")
 
-
 class QQQCSVExtractor:
 
     def __init__(
@@ -22,9 +21,8 @@ class QQQCSVExtractor:
         self.schema = schema
 
     def prepare_files(self) -> str:
-        """
-        Normalize filenames and return full path to expected raw qqq CSV.
-        """
+        logger.info(f"Start preparing filenames from {self.raw_path}")
+
         files = list_files(self.raw_path)
 
         for f in files:
@@ -36,7 +34,7 @@ class QQQCSVExtractor:
             raise FileNotFoundError(
                 f"Expected CSV not found: {expected_path}"
             )
-
+            
         return expected_path
 
     def read(self) -> DataFrame:

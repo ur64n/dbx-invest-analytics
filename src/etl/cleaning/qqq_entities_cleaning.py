@@ -6,10 +6,6 @@ from src.etl.validation.qqq_entities_validation import QQQEntitiesValidator
 logger = get_logger("cleaning")
 
 class QQQEntitiesCleaner:
-    """
-    Data standardization only.
-    DataFrame -> DataFrame
-    """
 
     @staticmethod
     def clean_columns(df: DataFrame) -> DataFrame:

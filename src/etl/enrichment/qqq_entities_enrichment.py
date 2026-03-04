@@ -5,10 +5,6 @@ from src.etl.validation.qqq_entities_validation import QQQEntitiesValidator
 logger = get_logger("qqq-enrichment")
 
 class QQQEntitiesEnricher:
-    """
-    Enrichment = joining datasets.
-    No IO, no API calls.
-    """
 
     @staticmethod
     def enrich(base_df: DataFrame, category_df: DataFrame) -> DataFrame:

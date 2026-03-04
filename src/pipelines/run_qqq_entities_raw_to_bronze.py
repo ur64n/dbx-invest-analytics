@@ -1,5 +1,3 @@
-#TODO: Prześledzić i poprawić kontrakty (writer)
-
 from pyspark.sql import SparkSession
 from src.config.logger import get_logger
 from src.config.config_loader import load_config
@@ -12,9 +10,10 @@ from src.etl.enrichment.qqq_entities_enrichment import QQQEntitiesEnricher
 from src.etl.cleaning.qqq_entities_cleaning import QQQEntitiesCleaner
 from src.etl.extraction.qqq_categories_extraction import QQQCategoriesExtractor
 
-logger = get_logger("pipeline")
+logger = get_logger("qqq_entities_raw_to_bronze_pipeline")
 
 def run(env: str = "dev"):
+    logger.info("Starting qqq_entities_raw_to_bronze_pipeline")
 
     # ---------- setup ----------
     spark = SparkSession.builder.getOrCreate() 
@@ -30,18 +29,29 @@ def run(env: str = "dev"):
 
     raw_df = extractor.read()
 
+    # ---------- validation ----------
+    QQQEntitiesValidator.validate_raw_csv_schema(raw_df)
+    QQQEntitiesValidator.raw_csv_not_empty(raw_df)
+
     # ---------- transform ----------
     bronze_df = QQQEntitiesTransformer.transform_raw(raw_df)
+
+    # ---------- validation ----------
+    QQQEntitiesValidator.validate_column_values(bronze_df)
+    QQQEntitiesValidator.validate_symbol_uniqueness(bronze_df)
 
     # ---------- write BRONZE ----------
     bronze_df.write.format("delta").mode("overwrite").saveAsTable(
         cfg["tables"]["bronze_qqq"]
     )
 
+
+
+
     # ---------- enrichment ----------
     symbols = [r.symbol for r in bronze_df.select("symbol").distinct().collect()]
 
-    category_df = QQQCategoriesExtractor(spark).extract(symbols) #ile symboli jest po ekstrakcji?
+    category_df = QQQCategoriesExtractor(spark).extract(symbols)
     enriched_df = QQQEntitiesEnricher.enrich(bronze_df, category_df)
 
     enriched_df.write.format("delta").mode("overwrite").saveAsTable(
@@ -51,6 +61,9 @@ def run(env: str = "dev"):
     # ---------- cleaning ----------
     silver_df = QQQEntitiesCleaner.clean_columns(enriched_df)
     silver_df = QQQEntitiesCleaner.clean_rows(silver_df)
+
+    # ---------- validation ----------
+    
 
     # ---------- write SILVER ----------
     silver_df.write.format("delta").mode("overwrite").saveAsTable(

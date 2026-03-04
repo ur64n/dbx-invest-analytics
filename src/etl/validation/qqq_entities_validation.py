@@ -2,13 +2,11 @@ from pyspark.sql import DataFrame
 from pyspark.sql.functions import col, lit
 from src.config.logger import get_logger
 
+from src.etl.schema.qqq_schema import required_columns, not_null_columns
+
 logger = get_logger("validation")
 
 class QQQEntitiesValidator:
-    """
-    Pure validation logic.
-    No IO, no SparkSession, no filesystem access.
-    """
 
     # ---------- RAW CSV VALIDATION ----------
 
@@ -16,8 +14,7 @@ class QQQEntitiesValidator:
     def validate_raw_csv_schema(df: DataFrame) -> None:
         logger.info("Validating raw CSV schema")
 
-        required_cols = {"Symbol", "Name", "% Holding"}
-        missing = required_cols - set(df.columns)
+        missing = required_columns - set(df.columns)
 
         if missing:
             raise ValueError(f"Missing required columns in raw CSV: {missing}")
@@ -29,26 +26,13 @@ class QQQEntitiesValidator:
         if df.count() == 0:
             raise ValueError("Raw CSV DataFrame is empty")
 
-
     # ---------- BRONZE QQQ VALIDATION ----------
-
-    @staticmethod
-    def validate_base_columns(df: DataFrame) -> None:
-        logger.info("Validating base QQQ columns")
-
-        required_cols = {"Symbol", "Name", "precent_holding"}
-        missing = required_cols - set(df.columns)
-
-        if missing:
-            raise ValueError(f"Missing required columns: {missing}")
 
     @staticmethod
     def validate_column_values(df: DataFrame) -> None:
         logger.info("Validating column values")
 
-        cols = ["Symbol", "Name", "precent_holding"]
-
-        for c in cols:
+        for c in not_null_columns:
             empty_count = df.filter(
                 col(c).isNull() | (col(c) == lit(""))
             ).count()
