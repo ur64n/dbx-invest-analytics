@@ -14,7 +14,7 @@ class QQQEntitiesTransformer:
             df
             .withColumnRenamed("Symbol", "symbol")
             .withColumnRenamed("Name", "name")
-            .withColumnRenamed("% Holding", "precent_holding")
+            .withColumnRenamed("% Holding", "percent_holding")
             .drop("Shares")
         )
 

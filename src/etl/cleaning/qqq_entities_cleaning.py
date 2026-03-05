@@ -20,8 +20,8 @@ class QQQEntitiesCleaner:
         df = df.toDF(*[c.strip().lower() for c in df.columns]) # list comp zbiera liste nazw kolumn z dataframe zmniejsza i usuwa biale znaki, a .toDF ustawia nowe nazwy w nowym dataframe
 
         df = df.withColumn(
-            "precent_holding",
-            regexp_replace(col("precent_holding"), "%", "")
+            "percent_holding",
+            regexp_replace(col("percent_holding"), "%", "")
             .cast("decimal(5,2)")
         )
 

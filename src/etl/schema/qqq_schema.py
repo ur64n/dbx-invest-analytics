@@ -16,5 +16,5 @@ required_columns = {
 not_null_columns = [
     "symbol",
     "name",
-    "precent_holding"
+    "percent_holding"
 ]

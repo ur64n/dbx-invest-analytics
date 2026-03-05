@@ -12,4 +12,3 @@ class DeltaTableWriter:
         logger.info(f"Writing {df.count()} rows to {self.table_name}")
 
         df.write.format("delta").mode("overwrite").saveAsTable(self.table_name)
-        
