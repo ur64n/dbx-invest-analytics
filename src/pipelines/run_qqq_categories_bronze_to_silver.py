@@ -5,6 +5,7 @@ from src.config.config_loader import load_config
 from src.etl.extraction.delta_table_extractor import DeltaTableExtractor
 from src.etl.cleaning.qqq_categories_cleaning import QQQCategoriesCleaner
 from src.etl.validation.qqq_categories_validation import QQQCategoriesValidator
+from src.etl.write.delta_table_writer import DeltaTableWriter
 
 logger = get_logger("qqq_categories_bronze_to_silver")
 
@@ -28,6 +29,11 @@ def run():
     QQQCategoriesValidator.validate_schema(df)
     QQQCategoriesValidator.validate_not_empty(df)
 
+    # ---------- write data ----------
+    DeltaTableWriter(
+        table_name=config["tables"]["silver_qqq_categoties"],
+        spark=spark
+    ).overwrite(df)
 
 if __name__ == "__main__":
     run()
