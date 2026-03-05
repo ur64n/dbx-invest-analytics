@@ -4,7 +4,7 @@ from src.config.config_loader import load_config
 
 from src.etl.extraction.qqq_categories_extraction import QQQCategoriesExtractor
 from src.etl.validation.qqq_categories_validation import QQQCategoriesValidator
-from src.etl.write.delta_table_writer import write
+from src.etl.write.delta_table_writer import DeltaTableWriter
 
 logger = get_logger("qqq_categories_api_to_bronze_pipeline")
 
@@ -24,9 +24,6 @@ def run():
 
     df = QQQCategoriesExtractor(spark).extract(symbols)
 
-    # ---------- cleaning ----------
-    
-
     # ---------- validation ----------
     QQQCategoriesValidator.validate_symbols_consistency(symbols, df)
     QQQCategoriesValidator.validate_not_empty(df)
@@ -35,8 +32,11 @@ def run():
     QQQCategoriesValidator.validate_symbol_nulls(df)
     QQQCategoriesValidator.validate_attribute_nulls(df)
 
+    # ---------- write data ----------
+    DeltaTableWriter(
+        table_name=config["tables"]["bronze_qqq_categories"],
+        spark=spark
+    ).overwrite(df)
     
-
-
 if __name__ == "__main__":
     run()

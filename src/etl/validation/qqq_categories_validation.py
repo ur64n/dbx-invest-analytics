@@ -1,5 +1,5 @@
 from pyspark.sql import DataFrame
-from pyspark.sql.functions import col, row
+from pyspark.sql.functions import col
 from src.config.logger import get_logger
 
 from src.etl.schema.qqq_categories_schema import required_columns
