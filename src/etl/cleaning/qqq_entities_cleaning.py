@@ -8,6 +8,12 @@ logger = get_logger("cleaning")
 class QQQEntitiesCleaner:
 
     @staticmethod
+    def remove_invalid_rows(df: DataFrame) -> DataFrame:
+        logger.info("Start cleaning rows in qqq_entities")
+
+        return df.filter(col("Symbol").isNotNull() & ~col("Symbol").rlike("(?i)^(qqq|downloaded)"))
+
+    @staticmethod
     def clean_columns(df: DataFrame) -> DataFrame:
         logger.info("Standardizing column names and types")
 
@@ -32,7 +38,5 @@ class QQQEntitiesCleaner:
                 c,
                 lower(trim(regexp_replace(col(c), "\\s+", " ")))
             )
-
-        QQQEntitiesValidator.validate_no_null_holdings(df)
 
         return df

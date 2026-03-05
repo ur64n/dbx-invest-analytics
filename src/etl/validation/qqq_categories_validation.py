@@ -1,5 +1,5 @@
 from pyspark.sql import DataFrame
-from pyspark.sql.functions import col
+from pyspark.sql.functions import col, row
 from src.config.logger import get_logger
 
 from src.etl.schema.qqq_categories_schema import required_columns
@@ -13,8 +13,7 @@ class QQQCategoriesValidator:
     def validate_symbols_consistency(symbols: list, df: DataFrame) -> None:
         logger.info("Validating symbols consistency")
 
-        missing_symbols = set(symbols) - set(df.select("symbol").distinct()
-        .collect())
+        missing_symbols = set(symbols) - set(row.symbol for row in df.select("symbol").distinct().collect())
 
         if missing_symbols:
             raise ValueError(f"Missing symbols in categories df: {missing_symbols}")
