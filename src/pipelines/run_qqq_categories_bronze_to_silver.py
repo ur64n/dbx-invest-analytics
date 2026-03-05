@@ -4,6 +4,7 @@ from src.config.config_loader import load_config
 
 from src.etl.extraction.delta_table_extractor import DeltaTableExtractor
 from src.etl.cleaning.qqq_categories_cleaning import QQQCategoriesCleaner
+from src.etl.validation.qqq_categories_validation import QQQCategoriesValidator
 
 logger = get_logger("qqq_categories_bronze_to_silver")
 
@@ -22,6 +23,11 @@ def run():
 
     # ---------- cleaning ----------
     df = QQQCategoriesCleaner.standardize_strings(df)
+
+    # ---------- validation ----------
+    QQQCategoriesValidator.validate_schema(df)
+    QQQCategoriesValidator.validate_not_empty(df)
+
 
 if __name__ == "__main__":
     run()

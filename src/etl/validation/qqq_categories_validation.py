@@ -4,7 +4,6 @@ from src.config.logger import get_logger
 
 from src.etl.schema.qqq_categories_schema import required_columns
 
-
 logger = get_logger("qqq_categories_validation")
 
 class QQQCategoriesValidator:
