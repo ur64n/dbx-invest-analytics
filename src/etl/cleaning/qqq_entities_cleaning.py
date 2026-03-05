@@ -28,10 +28,8 @@ class QQQEntitiesCleaner:
         return df
 
     @staticmethod
-    def clean_rows(df: DataFrame) -> DataFrame:
+    def clean_rows(df: DataFrame, text_cols: [str]) -> DataFrame:
         logger.info("Standardizing row values")
-
-        text_cols = ["symbol", "name", "sector", "industry"]
 
         for c in text_cols:
             df = df.withColumn(

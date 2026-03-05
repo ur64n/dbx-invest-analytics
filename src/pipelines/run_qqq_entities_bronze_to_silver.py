@@ -22,7 +22,7 @@ def run():
 
     # ---------- cleaning ----------
     df = QQQEntitiesCleaner.clean_columns(df)
-    df = 
+    df = QQQEntitiesCleaner.clean_rows(df,["symbol","name"])
 
 if __name__ == "__main__":
     run()
