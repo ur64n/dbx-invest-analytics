@@ -80,6 +80,7 @@ class QQQEntitiesValidator:
             )
 
     # ---------- ENRICHMENT VALIDATION ----------
+    #TODO: Currently not used methods. Move enrichment validations to silver_to_gold pipeline
 
     @staticmethod
     def validate_enrichment_inputs(

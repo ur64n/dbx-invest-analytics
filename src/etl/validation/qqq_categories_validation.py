@@ -55,6 +55,3 @@ class QQQCategoriesValidator:
         if missing_values:
             logger.warning(f"In categories df, found: {missing_values} rows with null sector or industry")
 
-        
-
-    

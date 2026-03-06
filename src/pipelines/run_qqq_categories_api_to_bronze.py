@@ -2,6 +2,7 @@ from pyspark.sql import SparkSession
 from src.config.logger import get_logger
 from src.config.config_loader import load_config
 
+from src.etl.extraction.delta_table_extractor import DeltaTableExtractor
 from src.etl.extraction.qqq_categories_extraction import QQQCategoriesExtractor
 from src.etl.validation.qqq_categories_validation import QQQCategoriesValidator
 from src.etl.write.delta_table_writer import DeltaTableWriter
@@ -14,10 +15,12 @@ def run():
     # ---------- setup ----------
     spark = SparkSession.builder.getOrCreate()
     config = load_config()
-    qqq_entities_df = config["tables"]["bronze_qqq"]
 
     # ---------- read data ----------
-    df = spark.read.table(qqq_entities_df)
+    df = DeltaTableExtractor(
+        spark=spark,
+        table_name=config["tables"]["bronze_qqq"]
+    ).read()
 
     # ---------- extraction ----------
     symbols = [r.symbol for r in df.select("symbol").distinct().collect()]

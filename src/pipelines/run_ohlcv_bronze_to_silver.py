@@ -3,9 +3,10 @@ from pyspark.sql import SparkSession
 from src.config.config_loader import load_config
 from src.config.logger import get_logger
 
+from src.etl.extraction.delta_table_extractor import DeltaTableExtractor
 from src.etl.transformations.ohlcv_transformation import OHLCVTransformer
 from src.etl.validation.ohlcv_validation import OHLCVValidator
-from src.etl.write.ohlcvSilverWriter import OHLCVSilverWriter
+from src.etl.write.delta_table_writer import DeltaTableWriter
 
 logger = get_logger("ohlcv_bronze_to_silver")
 
@@ -16,11 +17,11 @@ def run():
     spark = SparkSession.builder.getOrCreate()
     config = load_config()
 
-    raw_ohlcv = config["tables"]["bronze_ohlcv"]
-    silver_ohlcv = config["tables"]["silver_ohlcv"]
-
     # ---------- read data ----------
-    df = spark.read.table(raw_ohlcv)
+    df = DeltaTableExtractor(
+        spark=spark,
+        table_name=config["tables"]["bronze_ohlcv"]
+    ).read()
 
     # ---------- transformation ----------
     df = OHLCVTransformer.cast_column_types(df)
@@ -36,15 +37,12 @@ def run():
     OHLCVValidator.validate_domain_rules(df)
 
     # ---------- write data ----------
-    ohlcv_silver_writer = OHLCVSilverWriter(
+    DeltaTableWriter(
         spark=spark,
-        path=silver_ohlcv
-    )
-
-    ohlcv_silver_writer.write_silver_ohlcv(df)
+        table_name=config["tables"]["silver_ohlcv"]
+    ).overwrite(df)
 
     logger.info("ohlcv_bronze_to_silver pipeline successfully completed")
 
 if __name__ == "__main__":
-    
     run()

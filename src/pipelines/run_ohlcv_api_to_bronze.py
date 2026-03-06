@@ -4,9 +4,10 @@ from pyspark.sql.functions import max as spark_max
 from src.config.config_loader import load_config
 from src.config.logger import get_logger
 
+from src.etl.extraction.delta_table_extractor import DeltaTableExtractor
 from src.etl.extraction.yahoo_finance.yahoo_ohlcv_extractor import download_ohlcv
 from src.etl.cleaning.ohlcv_cleaning import OHLCVCleaner
-from src.etl.write.ohlcvWriter import OHLCVWriter
+from src.etl.write.delta_table_writer import DeltaTableWriter
 
 from datetime import datetime, timedelta, UTC
 
@@ -19,16 +20,20 @@ def run():
     spark = SparkSession.builder.getOrCreate()
     config = load_config()
 
-    qqq_silver_entities = config["tables"]["silver_qqq"]
-    ohlcv_bronze_table = config["tables"]["bronze_ohlcv"]
+    # ---------- tables ----------
     ohlcv_table = config["tables"]["silver_ohlcv"]
 
+    # ---------- parameters ----------
     base_start_date = config["yfinance"]["start_date"]
     window_refresh_months = config["yfinance"]["window_refresh_months"]
 
-    # ---------- load symbols ----------
-    entities_df = spark.table(qqq_silver_entities)
+    # ---------- read data ----------
+    entities_df = DeltaTableExtractor(
+        spark=spark,
+        table_name=config["tables"]["silver_qqq"]
+    ).read()
 
+    # ---------- load symbols ----------
     symbols = [
         row["symbol"]
         for row in entities_df.select("symbol").distinct().collect()
@@ -94,14 +99,10 @@ def run():
     df = spark.createDataFrame(pdf)
 
     # ---------- write ----------
-    ohlcv_writer = OHLCVWriter(
-        spark=spark, 
-        path=ohlcv_bronze_table
-    )
-    
-    logger.info(f"Writing to table: {ohlcv_bronze_table}")
-
-    ohlcv_writer.write_bronze_ohlcv(df)
+    DeltaTableWriter(
+        spark=spark,
+        table_name=config["tables"]["bronze_ohlcv"]
+    ).overwrite(df)
 
     logger.info("OHLCV pipeline successfully")
 

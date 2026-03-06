@@ -36,8 +36,6 @@ def run(env: str = "dev"):
     # ---------- validation ----------
     QQQEntitiesValidator.validate_schema(cleaned_df, required_raw_columns)
     QQQEntitiesValidator.validate_not_empty(cleaned_df)
-#TODO: consider move this valid to bronze_to_silver_pipeline
-#QQQEntitiesValidator.validate_no_null_holdings(df)
 
     # ---------- transform ----------
     bronze_df = QQQEntitiesTransformer.transform_raw(cleaned_df)
@@ -54,7 +52,6 @@ def run(env: str = "dev"):
 
 #TODO: move enrichment to silver_to_gold pipeline
 
-
     # # ---------- enrichment ----------
     # symbols = [r.symbol for r in bronze_df.select("symbol").distinct().collect()]
 
@@ -64,21 +61,6 @@ def run(env: str = "dev"):
     # enriched_df.write.format("delta").mode("overwrite").saveAsTable(
     #     cfg["tables"]["bronze_qqq_enriched"]
     # )
-
-    # # ---------- cleaning ----------
-    # silver_df = QQQEntitiesCleaner.clean_columns(enriched_df)
-    # silver_df = QQQEntitiesCleaner.clean_rows(silver_df)
-
-    # # ---------- validation ----------
-    
-
-    # # ---------- write SILVER ----------
-    # silver_df.write.format("delta").mode("overwrite").saveAsTable(
-    #     cfg["tables"]["silver_qqq"]
-    # )
-
-    # logger.info("Pipeline finished successfully")
-
 
 if __name__ == "__main__":
     run()
