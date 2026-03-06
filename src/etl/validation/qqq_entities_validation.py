@@ -8,8 +8,6 @@ logger = get_logger("validation")
 
 class QQQEntitiesValidator:
 
-    # ---------- RAW CSV VALIDATION ----------
-
     @staticmethod
     def validate_schema(df: DataFrame, req_cols: {set}) -> None:
         logger.info("Validating required columns in dataset")
@@ -26,8 +24,6 @@ class QQQEntitiesValidator:
         if df.count() == 0:
             raise ValueError("Raw CSV DataFrame is empty")
 
-    # ---------- BRONZE QQQ VALIDATION ----------
-
     @staticmethod
     def validate_column_values(df: DataFrame) -> None:
         logger.info("Validating column values")
@@ -43,6 +39,16 @@ class QQQEntitiesValidator:
                 logger.warning(
                     f"Found {empty_count} empty values in column: {c}"
                 )
+
+    @staticmethod
+    def validate_holding_range(df: DataFrame) -> None:
+        logger.info("Validating holding range")
+
+        if df.filter((col("precent_holding")) < 0 | (col("precent_holding") > 100)).count() > 0:
+            raise ValueError("Found values outside of range 0-100 in precent_holding column")
+
+        if df.filter(col("precent_holding") == 0).count() > 0:
+            raise ValueError("Found 0 values in precent_holding column")
 
     @staticmethod
     def validate_symbol_uniqueness(df: DataFrame) -> None:

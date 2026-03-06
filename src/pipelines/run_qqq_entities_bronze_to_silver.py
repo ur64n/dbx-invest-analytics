@@ -29,6 +29,8 @@ def run():
 
     # ---------- validation ----------
     QQQEntitiesValidator.validate_schema(df, required_silver_columns)
+    QQQEntitiesCleaner.validate_holding_range(df)
+    
 
 
 if __name__ == "__main__":
