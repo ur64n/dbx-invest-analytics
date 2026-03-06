@@ -8,6 +8,8 @@ logger = get_logger("validation")
 
 class QQQEntitiesValidator:
 
+    # ---------- Reusable ---------- 
+
     @staticmethod
     def validate_schema(df: DataFrame, req_cols: {set}) -> None:
         logger.info("Validating required columns in dataset")
@@ -23,6 +25,8 @@ class QQQEntitiesValidator:
 
         if df.count() == 0:
             raise ValueError("Raw CSV DataFrame is empty")
+
+    # ---------- Bronze ----------
 
     @staticmethod
     def validate_column_values(df: DataFrame) -> None:
@@ -41,16 +45,6 @@ class QQQEntitiesValidator:
                 )
 
     @staticmethod
-    def validate_holding_range(df: DataFrame) -> None:
-        logger.info("Validating holding range")
-
-        if df.filter((col("precent_holding")) < 0 | (col("precent_holding") > 100)).count() > 0:
-            raise ValueError("Found values outside of range 0-100 in precent_holding column")
-
-        if df.filter(col("precent_holding") == 0).count() > 0:
-            raise ValueError("Found 0 values in precent_holding column")
-
-    @staticmethod
     def validate_symbol_uniqueness(df: DataFrame) -> None:
         logger.info("Validating symbol uniqueness")
 
@@ -60,6 +54,29 @@ class QQQEntitiesValidator:
         if total != distinct:
             raise ValueError(
                 f"Found {total - distinct} duplicate Symbol values"
+            )
+
+    # ---------- SILVER VALIDATION ----------
+
+    @staticmethod
+    def validate_holding_range(df: DataFrame) -> None:
+        logger.info("Validating holding range")
+
+        if df.filter((col("percent_holding") < 0) | (col("percent_holding") > 100)).count() > 0:
+            raise ValueError("Found values outside of range 0-100 in precent_holding column")
+
+        if df.filter(col("percent_holding") == 0).count() > 0:
+            raise ValueError("Found 0 values in precent_holding column")
+
+    @staticmethod
+    def validate_no_null_holdings(df: DataFrame) -> None:
+        logger.info("Validating no null percent holdings")
+
+        null_count = df.filter(df["percent_holding"].isNull()).count()
+
+        if null_count > 0:
+            logger.warning(
+                f"Found {null_count} null values in precent_holding column"
             )
 
     # ---------- ENRICHMENT VALIDATION ----------
@@ -105,15 +122,3 @@ class QQQEntitiesValidator:
                 f"Missing sector={missing_sector}, industry={missing_industry}"
             )
 
-    # ---------- SILVER VALIDATION ----------
-
-    @staticmethod
-    def validate_no_null_holdings(df: DataFrame) -> None:
-        logger.info("Validating no null percent holdings")
-
-        null_count = df.filter(df["precent_holding"].isNull()).count()
-
-        if null_count > 0:
-            logger.warning(
-                f"Found {null_count} null values in precent_holding column"
-            )
