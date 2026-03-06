@@ -2,8 +2,11 @@ from pyspark.sql import SparkSession
 from src.config.config_loader import load_config
 from src.config.logger import get_logger
 
+from src.etl.schema.qqq_entities_schema import required_silver_columns
+
 from src.etl.extraction.delta_table_extractor import DeltaTableExtractor
 from src.etl.cleaning.qqq_entities_cleaning import QQQEntitiesCleaner
+from src.etl.validation.qqq_entities_validation import QQQEntitiesValidator
 
 logger = get_logger("qqq_entities_bronze_to_silver")
 
@@ -23,6 +26,10 @@ def run():
     # ---------- cleaning ----------
     df = QQQEntitiesCleaner.clean_columns(df)
     df = QQQEntitiesCleaner.clean_rows(df,["symbol","name"])
+
+    # ---------- validation ----------
+    QQQEntitiesValidator.validate_schema(df, required_silver_columns)
+
 
 if __name__ == "__main__":
     run()

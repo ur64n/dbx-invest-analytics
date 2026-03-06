@@ -2,7 +2,8 @@ from pyspark.sql import SparkSession
 from src.config.logger import get_logger
 from src.config.config_loader import load_config
 
-from src.etl.schema.qqq_schema import qqq_schema 
+from src.etl.schema.qqq_entities_schema import qqq_schema, required_raw_columns
+
 from src.etl.extraction.qqq_entities_extraction import QQQCSVExtractor
 from src.etl.cleaning.qqq_entities_cleaning import QQQEntitiesCleaner
 from src.etl.validation.qqq_entities_validation import QQQEntitiesValidator
@@ -33,8 +34,8 @@ def run(env: str = "dev"):
     cleaned_df = QQQEntitiesCleaner.remove_invalid_rows(raw_df)
 
     # ---------- validation ----------
-    QQQEntitiesValidator.validate_raw_csv_schema(cleaned_df)
-    QQQEntitiesValidator.validate_raw_csv_not_empty(cleaned_df)
+    QQQEntitiesValidator.validate_schema(cleaned_df, required_raw_columns)
+    QQQEntitiesValidator.validate_not_empty(cleaned_df)
 #TODO: consider move this valid to bronze_to_silver_pipeline
 #QQQEntitiesValidator.validate_no_null_holdings(df)
 

@@ -2,7 +2,7 @@ from pyspark.sql import DataFrame
 from pyspark.sql.functions import col, lit
 from src.config.logger import get_logger
 
-from src.etl.schema.qqq_schema import required_columns, not_null_columns
+from src.etl.schema.qqq_entities_schema import not_null_columns
 
 logger = get_logger("validation")
 
@@ -11,16 +11,16 @@ class QQQEntitiesValidator:
     # ---------- RAW CSV VALIDATION ----------
 
     @staticmethod
-    def validate_raw_csv_schema(df: DataFrame) -> None:
-        logger.info("Validating raw CSV schema")
+    def validate_schema(df: DataFrame, req_cols: {set}) -> None:
+        logger.info("Validating required columns in dataset")
 
-        missing = required_columns - set(df.columns)
+        missing = req_cols - set(df.columns)
 
         if missing:
-            raise ValueError(f"Missing required columns in raw CSV: {missing}")
+            raise ValueError(f"Missing required column in dataset: {missing}")
 
     @staticmethod
-    def validate_raw_csv_not_empty(df: DataFrame) -> None:
+    def validate_not_empty(df: DataFrame) -> None:
         logger.info("Validating raw CSV not empty")
 
         if df.count() == 0:

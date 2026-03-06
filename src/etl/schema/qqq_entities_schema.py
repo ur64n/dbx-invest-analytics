@@ -7,10 +7,16 @@ qqq_schema = StructType([
     StructField("Shares", StringType(), True)
 ])
 
-required_columns = {
+required_raw_columns = {
     "Symbol",
     "Name",
     "% Holding"
+}
+
+required_silver_columns = {
+    "symbol",
+    "name",
+    "percent_holding"
 }
 
 not_null_columns = [
