@@ -7,6 +7,7 @@ from src.etl.schema.qqq_entities_schema import required_silver_columns
 from src.etl.extraction.delta_table_extractor import DeltaTableExtractor
 from src.etl.cleaning.qqq_entities_cleaning import QQQEntitiesCleaner
 from src.etl.validation.qqq_entities_validation import QQQEntitiesValidator
+from src.etl.write.delta_table_writer import DeltaTableWriter
 
 logger = get_logger("qqq_entities_bronze_to_silver")
 
@@ -32,7 +33,13 @@ def run():
     QQQEntitiesValidator.validate_holding_range(df)
     QQQEntitiesValidator.validate_no_null_holdings(df)
 
-
+    # ---------- write data ----------
+    DeltaTableWriter(
+        table_name=config["tables"]["silver_qqq"],
+        spark=spark
+    ).overwrite(df)
+    
+    logger.info("Pipeline finished successfully")
 
 if __name__ == "__main__":
     run()

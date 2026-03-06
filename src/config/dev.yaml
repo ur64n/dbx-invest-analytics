@@ -16,7 +16,7 @@ tables:
   bronze_qqq_categories: bronze.qqq_etf_categories
   bronze_qqq_enriched: bronze.qqq_etf_entities_enriched #?
   bronze_ohlcv: bronze.ohlcv_indicators
-  silver_qqq: silver.qqq_silver_entities
+  silver_qqq: silver.qqq_entities
   silver_qqq_categoties: silver.qqq_etf_categories
   silver_macro_indicators: silver.fred_indicators
   silver_macro_indicator_metadata: silver.fred_macro_metadata_indicators
