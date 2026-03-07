@@ -5,3 +5,9 @@ fred_schema = StructType([
     StructField("date", DateType(), False),
     StructField("value", DoubleType(), True),
 ])
+
+REQUIRED_COLUMNS = {
+    "indicator_id",
+    "date",
+    "value",
+}

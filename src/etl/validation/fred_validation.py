@@ -3,21 +3,17 @@ from pyspark.sql.functions import col
 from src.config.logger import get_logger
 from pyspark.sql.functions import current_date
 
+from src.etl.schema.fred_schema import REQUIRED_COLUMNS
+
 logger = get_logger("fred_validation")
 
 class FredValidator:
-    #TODO: przeniesc do pliku schema
-    REQUIRED_COLUMNS = {
-        "indicator_id",
-        "date",
-        "value",
-    }
 
     @staticmethod
     def validate_schema(df: DataFrame) -> None:
         logger.info(f"Validating FRED required columns")
 
-        missing = FredValidator.REQUIRED_COLUMNS - set(df.columns)
+        missing = REQUIRED_COLUMNS - set(df.columns)
 
         if missing:
             raise ValueError(f"Missing required columns: {missing}")

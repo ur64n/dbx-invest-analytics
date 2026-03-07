@@ -13,7 +13,7 @@ logger = get_logger("fred_cleaning")
 class FredCleaner:
 
     @staticmethod
-    def clean(df: DataFrame) -> DataFrame:
+    def standardize_columns(df: DataFrame) -> DataFrame:
         logger.info("Cleaning FRED dataset")
 
         # --- column standardization ---

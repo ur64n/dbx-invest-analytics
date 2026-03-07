@@ -2,22 +2,17 @@ from pyspark.sql import DataFrame
 from pyspark.sql.functions import col
 from src.config.logger import get_logger
 
+from src.etl.schema.fred_metadata_schema import REQUIRED_COLUMNS
+
 logger = get_logger("fred_metadata_validation")
 
 class FredMetadataValidator:
-
-#TODO: Move to schema
-    REQUIRED_COLUMNS = {
-        "indicator_id",
-        "unit",
-        "frequency",
-    }
 
     @staticmethod
     def validate_metadata_schema(df: DataFrame) -> None:
         logger.info("Validating metadata schema")
 
-        missing_columns = FredMetadataValidator.REQUIRED_COLUMNS - set(df.columns)
+        missing_columns = REQUIRED_COLUMNS - set(df.columns)
         if missing_columns:
             raise ValueError(f"Missing required columns: {missing_columns}")
 
@@ -45,7 +40,7 @@ class FredMetadataValidator:
             raise ValueError(f"Duplicate indicator_id in metadata")
 
     @staticmethod
-    def validate_cannonical_frequency(df: DataFrame) -> None:
+    def validate_canonical_frequency(df: DataFrame) -> None:
         logger.info("Validating fred metadata frequency cannonical standard")
 
         allowed = ["m", "d", "q", "a"]

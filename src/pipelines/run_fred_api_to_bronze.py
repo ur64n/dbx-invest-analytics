@@ -13,11 +13,9 @@ from src.etl.schema.fred_metadata_schema import fred_metadata_schema
 from src.etl.extraction.fred.fred_client import FredClient
 from src.etl.extraction.fred.fred_run_metadata import FredRunMetadataWriter
 from src.etl.transformations.fred_xml_parser import FredXMLParser
-from src.etl.cleaning.fred_cleaning import FredCleaner # move
-from src.etl.cleaning.fred_metadata_cleaning import FredMetadataCleaner # move
 from src.etl.validation.fred_validation import FredValidator
 from src.etl.validation.fred_metadata_validation import FredMetadataValidator
-from src.etl.enrichment.fred_indicator_enrichment import FredIndicatorEnricher # move
+#from src.etl.enrichment.fred_indicator_enrichment import FredIndicatorEnricher # move
 from src.etl.write.delta_table_writer import DeltaTableWriter
 
 logger = get_logger("fred_api_to_bronze")
@@ -39,8 +37,8 @@ def run():
     run_ts = datetime.now(ZoneInfo("Europe/Warsaw"))
 
     # ---------- tables ----------
-    silver_macro_indicators = config["tables"]["silver_macro_indicators"]
-    silver_macro_indicator_metadata = config["tables"]["silver_macro_indicator_metadata"]
+    silver_macro_indicators = config["tables"]["silver_fred_macro_indicators"]
+    silver_macro_indicator_metadata = config["tables"]["silver_fred_macro_indicator_metadata"]
 
     # ---------- window refresh logic ----------
     exists = spark.catalog.tableExists(silver_macro_indicators)
@@ -158,7 +156,7 @@ def run():
     FredValidator.validate_not_empty(fact_df)
 
     FredMetadataValidator.validate_metadata_schema(dim_df)
-    FredMetadataValidator.validate_not_empty(dim_df)
+    FredMetadataValidator.validate_metadata_not_empty(dim_df)
     
     # ---------- write ---------- 
     DeltaTableWriter(
@@ -171,54 +169,39 @@ def run():
         table_name=config["tables"]["bronze_fred_macro_indicator_metadata"]
         ).overwrite(dim_df)
     
-    logger.info("...")
+    logger.info("Fred pipeline api to bronze finished successfully")
     
-    if __name__ == "__main__":
-        run()
+if __name__ == "__main__":
+    run()
 
     #TODO: Move rest logic to silver and gold pipelines
 
-    # ---------- fact cleaning ----------
-    cleaned_df = FredCleaner.clean(fact_df)
-    
-    # ---------- fact domain validation ----------
-    FredValidator.validate_domain_rules(cleaned_df)
-    FredValidator.validate_uniqueness(cleaned_df)
+    # # ---------- write metadata ----------
+    # metadata_writer = FredMetadataWriter(
+    #     spark, 
+    #     metadata_table_name=silver_macro_indicator_metadata
+    # )
 
-    # ---------- metadata cleaning ----------
-    cleaned_metadata_df = FredMetadataCleaner.clean_metadata(dim_df)
+    # metadata_writer.merge(cleaned_metadata_df)
 
-    # ---------- metadata domain validation ---------
-    FredMetadataValidator.validate_metadata_schema(cleaned_metadata_df)
-    FredMetadataValidator.validate_metadata_key_uniqueness(cleaned_metadata_df)
-    FredMetadataValidator.validate_cannonical_frequency(cleaned_metadata_df)
+    # # ---------- enrichment ----------
+    # metadata_df = spark.table(silver_macro_indicator_metadata)
 
-    # ---------- write metadata ----------
-    metadata_writer = FredMetadataWriter(
-        spark, 
-        metadata_table_name=silver_macro_indicator_metadata
-    )
+    # enriched_df = FredIndicatorEnricher.enrich(cleaned_df, metadata_df)
 
-    metadata_writer.merge(cleaned_metadata_df)
+    # # ---------- write enriched SILVER ----------
+    # fred_writer = FredSilverWriter(
+    #     spark, 
+    #     table_name=silver_macro_indicators
+    # )
 
-    # ---------- enrichment ----------
-    metadata_df = spark.table(silver_macro_indicator_metadata)
+    # logger.info("Writing SILVER fred_indicators enriched table")
 
-    enriched_df = FredIndicatorEnricher.enrich(cleaned_df, metadata_df)
+    # if not has_data:
+    #     fred_writer.write_bootstrap(enriched_df)
+    # else:
+    #     fred_writer.write_refresh(enriched_df)
 
-    # ---------- write enriched SILVER ----------
-    fred_writer = FredSilverWriter(
-        spark, 
-        table_name=silver_macro_indicators
-    )
-
-    logger.info("Writing SILVER fred_indicators enriched table")
-
-    if not has_data:
-        fred_writer.write_bootstrap(enriched_df)
-    else:
-        fred_writer.write_refresh(enriched_df)
-
-    logger.info("FRED pipeline finished successfully")
+    # logger.info("FRED pipeline finished successfully")
 
 
