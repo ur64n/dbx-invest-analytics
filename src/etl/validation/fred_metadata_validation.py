@@ -6,6 +6,7 @@ logger = get_logger("fred_metadata_validation")
 
 class FredMetadataValidator:
 
+#TODO: Move to schema
     REQUIRED_COLUMNS = {
         "indicator_id",
         "unit",

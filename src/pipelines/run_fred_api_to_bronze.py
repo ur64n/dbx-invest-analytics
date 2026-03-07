@@ -13,37 +13,38 @@ from src.etl.schema.fred_metadata_schema import fred_metadata_schema
 from src.etl.extraction.fred.fred_client import FredClient
 from src.etl.extraction.fred.fred_run_metadata import FredRunMetadataWriter
 from src.etl.transformations.fred_xml_parser import FredXMLParser
-from src.etl.cleaning.fred_cleaning import FredCleaner
-from src.etl.cleaning.fred_metadata_cleaning import FredMetadataCleaner
+from src.etl.cleaning.fred_cleaning import FredCleaner # move
+from src.etl.cleaning.fred_metadata_cleaning import FredMetadataCleaner # move
 from src.etl.validation.fred_validation import FredValidator
 from src.etl.validation.fred_metadata_validation import FredMetadataValidator
-from src.etl.write.FredSilverWriter import FredSilverWriter
-from src.etl.write.FredMetadataWriter import FredMetadataWriter
-from src.etl.enrichment.fred_indicator_enrichment import FredIndicatorEnricher
+from src.etl.enrichment.fred_indicator_enrichment import FredIndicatorEnricher # move
+from src.etl.write.delta_table_writer import DeltaTableWriter
 
-logger = get_logger("fred_pipeline")
+logger = get_logger("fred_api_to_bronze")
 
 def run():
     logger.info("Starting FRED macro indicators pipeline")
 
     # ---------- setup ----------
     spark = SparkSession.builder.getOrCreate()
+    config = load_config()
+
+    # ---------- secrets ----------
     dbutils = DBUtils(spark)
     fred_api_key = dbutils.secrets.get("my-scope", "API_KEY_FRED")
 
-    config = load_config()
-    run_ts = datetime.now(ZoneInfo("Europe/Warsaw"))
-
+    # ---------- parameters ----------
     series_ids = config["fred"]["series_ids"]
     refresh_window_months = config["fred"]["window_refresh_months"]
+    run_ts = datetime.now(ZoneInfo("Europe/Warsaw"))
+
+    # ---------- tables ----------
     silver_macro_indicators = config["tables"]["silver_macro_indicators"]
     silver_macro_indicator_metadata = config["tables"]["silver_macro_indicator_metadata"]
 
-    # ---------- extraction ----------
-    fred_client = FredClient(config=config, api_key=fred_api_key) 
-    metadata_writer = FredRunMetadataWriter(spark)
-    
+    # ---------- window refresh logic ----------
     exists = spark.catalog.tableExists(silver_macro_indicators)
+
     has_data = (
         exists 
         and spark.table(silver_macro_indicators).limit(1).count() > 0
@@ -59,6 +60,14 @@ def run():
         f"Extraction mode: {'BOOTSTRAP' if not has_data else 'REFRESH'} | "
         f"Observation start = {observation_start}"
     )
+
+    # ---------- extraction ----------
+    fred_client = FredClient(
+        config=config, 
+        api_key=fred_api_key
+        )
+    
+    metadata_writer = FredRunMetadataWriter(spark)
 
     raw_xml_paths: list[tuple[str, str]] = []
     metadata_rows: list[dict[str, Optional[str]]] = []
@@ -135,25 +144,49 @@ def run():
         raise RuntimeError("No FRED data extracted - pipeline stopped")
 
     # ---------- spark_df ---------- 
-    combined_df = spark.createDataFrame(rows, schema=fred_schema) # dict -> df
-    fred_metadata = spark.createDataFrame(metadata_rows, schema=fred_metadata_schema) # metadata unit frequency df 
+    fact_df = spark.createDataFrame(
+        rows, 
+        schema=fred_schema
+        ) # dict -> df
+    dim_df = spark.createDataFrame(
+        metadata_rows, 
+        schema=fred_metadata_schema
+        ) # metadata unit frequency df 
     
-    # ---------- fact validation ----------
-    FredValidator.validate_schema(combined_df)
-    FredValidator.validate_not_empty(combined_df)
+    # ---------- validation ---------- 
+    FredValidator.validate_schema(fact_df)
+    FredValidator.validate_not_empty(fact_df)
+
+    FredMetadataValidator.validate_metadata_schema(dim_df)
+    FredMetadataValidator.validate_not_empty(dim_df)
+    
+    # ---------- write ---------- 
+    DeltaTableWriter(
+        spark=spark,
+        table_name=config["tables"]["bronze_fred_macro_indicators"]
+        ).overwrite(fact_df)
+    
+    DeltaTableWriter(
+        spark=spark,
+        table_name=config["tables"]["bronze_fred_macro_indicator_metadata"]
+        ).overwrite(dim_df)
+    
+    logger.info("...")
+    
+    if __name__ == "__main__":
+        run()
+
+    #TODO: Move rest logic to silver and gold pipelines
 
     # ---------- fact cleaning ----------
-    cleaned_df = FredCleaner.clean(combined_df)
+    cleaned_df = FredCleaner.clean(fact_df)
     
     # ---------- fact domain validation ----------
     FredValidator.validate_domain_rules(cleaned_df)
     FredValidator.validate_uniqueness(cleaned_df)
 
-    # ---------- metadata validation ---------
-    FredMetadataValidator.validate_metadata_schema(fred_metadata)
-
     # ---------- metadata cleaning ----------
-    cleaned_metadata_df = FredMetadataCleaner.clean_metadata(fred_metadata)
+    cleaned_metadata_df = FredMetadataCleaner.clean_metadata(dim_df)
 
     # ---------- metadata domain validation ---------
     FredMetadataValidator.validate_metadata_schema(cleaned_metadata_df)
@@ -188,5 +221,4 @@ def run():
 
     logger.info("FRED pipeline finished successfully")
 
-if __name__ == "__main__":
-    run()
+
