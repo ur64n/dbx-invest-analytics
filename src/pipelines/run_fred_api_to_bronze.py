@@ -71,8 +71,9 @@ def run():
     metadata_rows: list[dict[str, Optional[str]]] = []
 
     logger.info(f"Starting extraction for {len(series_ids)} series")
-
-    for series_id in series_ids: #TODO: Move iteration to extractor
+    
+#TODO: Move iteration to extractor
+    for series_id in series_ids: 
         try:
             logger.info(f"Extracting series {series_id}")
 
@@ -174,7 +175,7 @@ def run():
 if __name__ == "__main__":
     run()
 
-    #TODO: Move rest logic to silver and gold pipelines
+    #TODO: Move rest logic to gold pipelines
 
     # # ---------- write metadata ----------
     # metadata_writer = FredMetadataWriter(

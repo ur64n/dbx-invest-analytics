@@ -34,17 +34,22 @@ def run():
     ).read()
 
     # ---------- load symbols ----------
-    symbols = [
+    qqq_symbols = [
         row["symbol"]
         for row in entities_df.select("symbol").distinct().collect()
     ]
 
-    logger.info(f"Number of symbols before cleaning: {len(symbols)}")
+    logger.info(f"Number of qqq_symbols before cleaning: {len(qqq_symbols)}")
+
+    benchmark_symbols = config["yfinance"]["benchmark_symbols"]
 
     # ---------- clean ----------
-    symbols = OHLCVCleaner.clean_list(symbols)
+    qqq_symbols = OHLCVCleaner.clean_list(qqq_symbols)
 
-    logger.info(f"Number of symbols after cleaning: {len(symbols)}")
+    logger.info(f"Number of symbols after cleaning: {len(qqq_symbols)}")
+
+    # ---------- combine collections ----------
+    symbols = qqq_symbols + benchmark_symbols
 
     # ---------- date range ----------
     end_date = datetime.now(UTC).strftime("%Y-%m-%d")
@@ -53,7 +58,7 @@ def run():
 
     has_data = (
         exists
-        and spark.table(ohlcv_table).limit(1).count() > 0
+        and spark.table(ohlcv_table).limit(1).count() > 0 #TODO: change to generic table extractor
     )
 
     if not has_data:

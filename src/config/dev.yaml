@@ -43,3 +43,9 @@ fred:
 yfinance:
   start_date: 2010-01-01
   window_refresh_months: 12
+  benchmark_symbols:
+    - ^VIX
+    - QQQ
+    - SPY
+    - TLT
+    - GLD
