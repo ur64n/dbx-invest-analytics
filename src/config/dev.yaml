@@ -24,6 +24,7 @@ tables:
   silver_fred_macro_indicator_metadata: silver.fred_macro_metadata_indicators
   silver_ohlcv: silver.ohlcv_indicators
   gold_ohlcv_with_dimension: gold.ohlcv_with_dimension
+  gold_fred_with_dimension: gold.fred_with_dimension
 
 # ---------- fred ----------
 fred:
