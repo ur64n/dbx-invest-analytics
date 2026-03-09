@@ -7,7 +7,7 @@ class OHLCVDimensionEnricher:
 
     @staticmethod
     def enrich_ohlcv_dimension(ohlcv_df: DataFrame, qqq_ent_df: DataFrame, qqq_cat_df: DataFrame) -> DataFrame:
-        logger.info("Enriching OHLCV with QQQ categories and entities dimensions")
+        logger.info("Start enriching OHLCV with QQQ categories and entities dimensions")
 
         return ( 
             ohlcv_df
