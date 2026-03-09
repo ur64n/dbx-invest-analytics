@@ -7,7 +7,7 @@ class OHLCVCleaner:
 
     @staticmethod
     def clean_list(symbol_list: list) -> list:
-        logger.info("Start cleaning list of symbols")
+        logger.info("Start cleaning list of qqq_symbols")
 
         pattern = re.compile(r"^[a-z]{1,5}$")
 
@@ -16,6 +16,6 @@ class OHLCVCleaner:
             if isinstance(s, str) and pattern.match(s)
         ]
 
-        logger.info(f"Symbols before cleaning: {len(symbol_list)} and after cleaning: {len(cleaned)}") 
+        logger.info(f"QQQ Symbols before cleaning: {len(symbol_list)} and after cleaning: {len(cleaned)}") 
 
         return cleaned

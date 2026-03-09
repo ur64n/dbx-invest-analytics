@@ -46,10 +46,10 @@ def run():
     # ---------- clean ----------
     qqq_symbols = OHLCVCleaner.clean_list(qqq_symbols)
 
-    logger.info(f"Number of symbols after cleaning: {len(qqq_symbols)}")
-
     # ---------- combine collections ----------
     symbols = qqq_symbols + benchmark_symbols
+
+    logger.info(f"Total symbols to download, after combinig lists: {symbols}")
 
     # ---------- date range ----------
     end_date = datetime.now(UTC).strftime("%Y-%m-%d")
