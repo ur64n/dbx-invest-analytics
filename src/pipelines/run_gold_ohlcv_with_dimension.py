@@ -37,7 +37,10 @@ def run():
         qqq_cat_df
         )
     
-    #df.filter(df.symbol.isin("^vix", "qqq", "spy", "tlt", "gld")).select("symbol", "name", "sector").distinct().show()
+    logger.info(f"OHLCV with dimension enrichment completed")
+    
+    assert df.count() == ohlcv_df.count(), "Row count mismatch after join"
 
+    
 if __name__ == "__main__":
     run()
