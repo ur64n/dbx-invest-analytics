@@ -14,7 +14,22 @@ def run():
     config = load_config()
 
     # ---------- read data ----------
+    ohlcv_df = DeltaTableExtractor(
+        spark=spark,
+        table_name=config["tables"]["ohlcv_indicators"]
+    ).read()
 
+    qqq_ent_df = DeltaTableExtractor(
+        spark=spark,
+        table_name=config["tables"]["qqq_entities"]
+    ).read()
+
+    qqq_cat_df = DeltaTableExtractor(
+        spark=spark,
+        table_name=config["tables"]["qqq_categories"]
+    ).read()
+
+    
 
 if __name__ == "__main__":
     run()
