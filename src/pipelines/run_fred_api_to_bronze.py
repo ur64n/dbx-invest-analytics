@@ -15,7 +15,6 @@ from src.etl.extraction.fred.fred_run_metadata import FredRunMetadataWriter
 from src.etl.transformations.fred_xml_parser import FredXMLParser
 from src.etl.validation.fred_validation import FredValidator
 from src.etl.validation.fred_metadata_validation import FredMetadataValidator
-#from src.etl.enrichment.fred_indicator_enrichment import FredIndicatorEnricher # move
 from src.etl.write.delta_table_writer import DeltaTableWriter
 
 logger = get_logger("fred_api_to_bronze")
@@ -174,35 +173,5 @@ def run():
     
 if __name__ == "__main__":
     run()
-
-    #TODO: Move rest logic to gold pipelines
-
-    # # ---------- write metadata ----------
-    # metadata_writer = FredMetadataWriter(
-    #     spark, 
-    #     metadata_table_name=silver_macro_indicator_metadata
-    # )
-
-    # metadata_writer.merge(cleaned_metadata_df)
-
-    # # ---------- enrichment ----------
-    # metadata_df = spark.table(silver_macro_indicator_metadata)
-
-    # enriched_df = FredIndicatorEnricher.enrich(cleaned_df, metadata_df)
-
-    # # ---------- write enriched SILVER ----------
-    # fred_writer = FredSilverWriter(
-    #     spark, 
-    #     table_name=silver_macro_indicators
-    # )
-
-    # logger.info("Writing SILVER fred_indicators enriched table")
-
-    # if not has_data:
-    #     fred_writer.write_bootstrap(enriched_df)
-    # else:
-    #     fred_writer.write_refresh(enriched_df)
-
-    # logger.info("FRED pipeline finished successfully")
 
 

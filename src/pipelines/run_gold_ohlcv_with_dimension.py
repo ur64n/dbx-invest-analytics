@@ -4,6 +4,7 @@ from src.config.logger import get_logger
 
 from src.etl.extraction.delta_table_extractor import DeltaTableExtractor
 from src.etl.enrichment.ohlcv_dimension_enrichment import OHLCVDimensionEnricher
+from src.etl.write.delta_table_writer import DeltaTableWriter
 
 logger = get_logger("gold_ohlcv_with_dimension")
 
@@ -39,8 +40,16 @@ def run():
     
     logger.info(f"OHLCV with dimension enrichment completed")
     
+    # ---------- validation ----------
     assert df.count() == ohlcv_df.count(), "Row count mismatch after join"
 
-    
+    # ---------- write ----------
+    DeltaTableWriter(
+        table_name=config["tables"]["gold_ohlcv_with_dimension"],
+        spark=spark
+    ).overwrite(df)
+
+    logger.info("gold_ohlcv_with_dimension pipeline completed successfully")
+
 if __name__ == "__main__":
     run()
