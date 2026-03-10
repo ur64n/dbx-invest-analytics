@@ -50,17 +50,5 @@ def run(env: str = "dev"):
         spark=spark
     ).overwrite(bronze_df)
 
-#TODO: move enrichment to silver_to_gold pipeline
-
-    # # ---------- enrichment ----------
-    # symbols = [r.symbol for r in bronze_df.select("symbol").distinct().collect()]
-
-    # category_df = QQQCategoriesExtractor(spark).extract(symbols)
-    # enriched_df = QQQEntitiesEnricher.enrich(bronze_df, category_df)
-
-    # enriched_df.write.format("delta").mode("overwrite").saveAsTable(
-    #     cfg["tables"]["bronze_qqq_enriched"]
-    # )
-
 if __name__ == "__main__":
     run()
