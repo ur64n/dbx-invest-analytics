@@ -50,5 +50,7 @@ def run(env: str = "dev"):
         spark=spark
     ).overwrite(bronze_df)
 
+    logger.info("qqq_entities_raw_to_bronze_pipeline completed successfully")
+
 if __name__ == "__main__":
     run()
