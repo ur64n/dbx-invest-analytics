@@ -4,6 +4,8 @@ from src.config.logger import get_logger
 
 from src.etl.extraction.delta_table_extractor import DeltaTableExtractor
 from src.etl.enrichment.ohlcv_dimension_enrichment import OHLCVDimensionEnricher
+from src.etl.validation.gold_fred_validation import GoldFredValidator
+from src.etl.validation.gold_ohlcv_validation import GoldOHLCVValidator
 from src.etl.write.delta_table_writer import DeltaTableWriter
 
 logger = get_logger("gold_ohlcv_with_dimension")
@@ -37,12 +39,13 @@ def run():
         qqq_ent_df, 
         qqq_cat_df
         )
-    
+
     logger.info(f"OHLCV with dimension enrichment completed")
-    
+
     # ---------- validation ----------
-    #TODO: Add new validation module for gold layer with null checks and move assertions to it
-    assert df.count() == ohlcv_df.count(), "Row count mismatch after join"
+    GoldFredValidator.validate_row_after_join(ohlcv_df, df)
+    GoldOHLCVValidator.validate_qqq_null_values(df)
+    GoldOHLCVValidator.validate_benchmark_null_values(df)
 
     # ---------- write ----------
     DeltaTableWriter(
