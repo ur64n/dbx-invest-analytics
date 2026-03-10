@@ -41,6 +41,7 @@ def run():
     logger.info(f"OHLCV with dimension enrichment completed")
     
     # ---------- validation ----------
+    #TODO: Add new validation module for gold layer with null checks and move assertions to it
     assert df.count() == ohlcv_df.count(), "Row count mismatch after join"
 
     # ---------- write ----------
