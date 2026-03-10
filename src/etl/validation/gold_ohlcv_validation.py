@@ -8,7 +8,7 @@ class GoldOHLCVValidator:
 
     @staticmethod
     def validate_qqq_null_values(df: DataFrame) -> None:
-        logger.info("")
+        logger.info("Validating null values in qqq entities dimensions columns")
 
         non_benchmark = df.filter(~col("symbol").isin("^vix", "qqq", "spy", "tlt", "gld"))
 
@@ -23,7 +23,7 @@ class GoldOHLCVValidator:
 
     @staticmethod
     def validate_benchmark_null_values(df: DataFrame) -> None:
-        logger.info("")
+        logger.info("Validating benchmark symbols have null dimensions")
 
         benchmark = df.filter(col("symbol").isin("^vix", "qqq", "spy", "tlt", "gld"))
 
