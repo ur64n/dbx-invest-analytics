@@ -4,7 +4,7 @@ from src.config.config_loader import load_config
 
 from src.etl.schema.qqq_entities_schema import qqq_schema, required_raw_columns
 
-from src.etl.extraction.qqq_entities_extraction import QQQCSVExtractor
+from src.etl.extraction.qqq_entities_extraction import QQQEntitiesExtractor
 from src.etl.cleaning.qqq_entities_cleaning import QQQEntitiesCleaner
 from src.etl.validation.qqq_entities_validation import QQQEntitiesValidator
 from src.etl.transformations.qqq_entities_transformation import QQQEntitiesTransformer
@@ -20,7 +20,7 @@ def run(env: str = "dev"):
     cfg = load_config(env)
 
     # ---------- extraction ----------
-    extractor = QQQCSVExtractor(
+    extractor = QQQEntitiesExtractor(
         spark=spark,
         raw_path=cfg["paths"]["raw_csv"],
         expected_filename=cfg["files"]["qqq_entities"],

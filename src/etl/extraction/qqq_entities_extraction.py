@@ -5,7 +5,7 @@ from src.etl.extraction.file_utils import list_files, normalize_filename
 
 logger = get_logger("qqq_csv_extraction")
 
-class QQQCSVExtractor:
+class QQQEntitiesExtractor:
 
     def __init__(
         self, 
