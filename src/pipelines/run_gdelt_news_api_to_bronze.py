@@ -3,6 +3,7 @@ from src.config.config_loader import load_config
 from src.config.logger import get_logger
 
 from src.etl.extraction.gdelt.gdelt_client import GdeltClient
+from src.etl.schema.gdelt_schema import gdelt_schema
 
 logger = get_logger("gdelt_new_api_to_bronze")
 
@@ -31,7 +32,12 @@ def run():
             unique_articles.append(a)
     
     # ---------- create df ----------
-    
+    df = spark.createDataFrame(
+        unique_articles,
+        gdelt_schema
+    )
+
+    df.limit(10).display()
 
 if __name__ == "__main__":
     run()
