@@ -21,6 +21,16 @@ def run():
         articles = gdelt_client.fetch_articles(kw)
         all_articles.extend(articles)
 
+    # ---------- deduplicate ----------
+    seen = set()
+    unique_articles = []
+
+    for a in all_articles:
+        if a["article_id"] not in seen:
+            seen.add(a["article_id"])
+            unique_articles.append(a)
+    
+    # ---------- create df ----------
     
 
 if __name__ == "__main__":
