@@ -14,12 +14,14 @@ def run():
     config = load_config()
 
     # ---------- extractor ----------
+    gdelt_client = GdeltClient(config)
+    all_articles = []
+
     for kw in config["gdelt"]["keywords"]:
+        articles = gdelt_client.fetch_articles(kw)
+        all_articles.extend(articles)
+
     
-    gdelt_data = GdeltClient(
-        config=config,
-        spark=spark
-    ).fetch_articles(kw)
 
 if __name__ == "__main__":
     run()
