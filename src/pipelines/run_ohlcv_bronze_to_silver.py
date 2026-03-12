@@ -40,7 +40,7 @@ def run():
     DeltaTableWriter(
         spark=spark,
         table_name=config["tables"]["silver_ohlcv"]
-    ).overwrite(df)
+    ).upsert(df, merge_keys=["date", "symbol"])
 
     logger.info("ohlcv_bronze_to_silver pipeline successfully completed")
 
