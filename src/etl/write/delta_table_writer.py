@@ -14,6 +14,11 @@ class DeltaTableWriter:
 
         df.write.format("delta").mode("overwrite").saveAsTable(self.table_name)
 
+    def overwrite_schema(self, df:DataFrame) -> None:
+        logger.info(f"Writing {df.count()} rows to {self.table_name} overwriteSchema = True")
+
+        df.write.format("delta").mode("overwrite").option("mergeSchema", "true").saveAsTable(self.table_name)
+
     def upsert(self, df: DataFrame, merge_keys: list[str]) -> None:
         logger.info(f"Upserting {df.count()} rows into {self.table_name}")
 

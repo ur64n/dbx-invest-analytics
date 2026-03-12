@@ -31,11 +31,8 @@ def download_ohlcv(spark, symbols: list, start_date: str, end_date: str):
             progress=False
         )
 
-        empty_count = 0
-
         if df.empty:
             logger.warning(f"Empty dataframe for {symbol}")
-            empty_count += 1
             continue
 
         # reset index (Date -> column)
@@ -56,6 +53,11 @@ def download_ohlcv(spark, symbols: list, start_date: str, end_date: str):
             raise ValueError(
                 f"Expected columns {expected_cols} not found in dataframe"
             )
+        
+        # unknown columns detection
+        unknown_cols = set(df.columns) - set(df.expected_cols)
+        if unknown_cols:
+            logger.warning(f"Unknown columns detected in source: {unknown_cols} - schema may have changed")
 
         # select only expected columns
         df = df[expected_cols]
