@@ -9,7 +9,6 @@ from src.etl.validation.fred_validation import FredValidator
 from src.etl.validation.fred_metadata_validation import FredMetadataValidator
 from src.etl.write.delta_table_writer import DeltaTableWriter
 
-
 logger = get_logger("fred_bronze_to_silver")
 
 def run():
@@ -45,12 +44,12 @@ def run():
     DeltaTableWriter(
         spark=spark,
         table_name=config["tables"]["silver_fred_macro_indicators"]
-    ).overwrite(fact_df)
+    ).upsert(fact_df, merge_keys=["indicator_id","date"])
 
     DeltaTableWriter(
         spark=spark,
         table_name=config["tables"]["silver_fred_macro_indicator_metadata"]
-    ).overwrite(dim_df)
+    ).upsert(dim_df, merge_keys=["indicator_id"])
 
 if __name__ == "__main__":
     run()
