@@ -19,8 +19,8 @@ class AlphaVantageSentimentClient:
         self.rate_limit_per_min = config["alpha_vantage"]["rate_limit_per_min"]
         self.articles_per_request = config["alpha_vantage"]["articles_per_request"]
 
-        #brakujace:
-        #-
+        #parametry do fetch_sentiment:
+        #-time_from + time_to <- oparte na window refresh i istnieniu tabeli w silver jezeli brak to bootstrap jezeli tabela jest to window refresh od daty z tabeli
 
     # ---------- helpers ----------
 
@@ -38,7 +38,7 @@ class AlphaVantageSentimentClient:
         params = {
             "funtion": "NEWS_SENTIMENT",
             "tickers": ticker,
-            "limit": self.limit,
+            "limit": self.articles_per_request,
             "sort": sort,
             "apikey": self.api_key
         }
