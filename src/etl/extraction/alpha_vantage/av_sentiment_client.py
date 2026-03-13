@@ -16,9 +16,11 @@ class AlphaVantageSentimentClient:
     def __init__(self, config: dict, api_key: str):
         self.base_url = config["alpha_vantage"]["base_url"]
         self.api_key = api_key
-        self.limit = config["alpha_vantage"]["articles_per_request"]
         self.rate_limit_per_min = config["alpha_vantage"]["rate_limit_per_min"]
         self.articles_per_request = config["alpha_vantage"]["articles_per_request"]
+
+        #brakujace:
+        #-
 
     # ---------- helpers ----------
 
