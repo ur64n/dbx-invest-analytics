@@ -18,6 +18,7 @@ class AlphaVantageSentimentClient:
         self.api_key = api_key
         self.rate_limit_per_min = config["alpha_vantage"]["rate_limit_per_min"]
         self.articles_per_request = config["alpha_vantage"]["articles_per_request"]
+        self.topics = config["alpha_vantage"]["topics"]
 
     # ---------- helpers ----------
 
@@ -38,6 +39,7 @@ class AlphaVantageSentimentClient:
             "limit": self.articles_per_request,
             "sort": sort,
             "apikey": self.api_key
+            "topics": self.topics
         }
         if time_from:
             params["time_from"] = time_from
