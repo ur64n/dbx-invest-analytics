@@ -50,3 +50,9 @@ yfinance:
     - SPY
     - TLT
     - GLD
+
+# ---------- alpha_vantage ----------
+alpha_vantage:
+  base_url: https://www.alphavantage.co/query
+  rate_limit_per_min: 5
+  
