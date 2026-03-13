@@ -18,7 +18,7 @@ class AlphaVantageSentimentClient:
         self.api_key = api_key
         self.rate_limit_per_min = config["alpha_vantage"]["rate_limit_per_min"]
         self.articles_per_request = config["alpha_vantage"]["articles_per_request"]
-        self.topics = config["alpha_vantage"]["topics"]
+        self.topics = ",".join(config["alpha_vantage"]["topics"])
 
     # ---------- helpers ----------
 
@@ -29,7 +29,6 @@ class AlphaVantageSentimentClient:
         self,
         ticker: str,
         time_from: Optional[str] = None,
-        time_to: Optional[str] = None,
         sort: str = "LATEST"
     ) -> str:
         
@@ -43,8 +42,6 @@ class AlphaVantageSentimentClient:
         }
         if time_from:
             params["time_from"] = time_from
-        if time_to:
-            params["time_to"] = time_to
 
         query = "&".join(f"{k}={v}" for k, v in params.items())
         return (f"{self.base_url}?{query}")
@@ -55,6 +52,7 @@ class AlphaVantageSentimentClient:
         self,
         ticker: str,
         time_from: Optional[str] = None,
-        time_to: Optional[str] = None,
         limit: int = 
     )
+
+    url = _build_url(ticker, )

@@ -45,6 +45,8 @@ def run():
         for row in entities_df.select("symbol").distinct().collect()
     ]
 
+    tickers = ",".join(symbol)
+
     logger.info(f"Total symbols to fetch sentiment for {len(symbols)}")
 
     # ---------- window refresh logic ----------
@@ -75,20 +77,10 @@ def run():
     #parser = AlphaVantageSentimentParser()
 
     all_rows: list[dict] = []
-    success_count = 0
-    failure_count = 0
 
-    for symbol in symbols:
-        try:
-            raw_json = client.fetch_sentiment(
-                ticker=symbol,
-                limit=limit_per_request,
-            )
-
-            if raw_json.get("_rate_limited"):
-                logger.warning(
-                    f"Rate limited at {symbol} - stopping extraction"
-                )
+    raw_json = client.fetch_sentiment(
+        tickers=tickers,
+        )
 
 
 
