@@ -107,7 +107,7 @@ def run():
     DeltaTableWriter(
         spark=spark,
         table_name=config["tables"]["bronze_ohlcv"]
-    ).overwrite(df)
+    ).overwrite_schema(df)
 
     logger.info("OHLCV pipeline successfully")
 

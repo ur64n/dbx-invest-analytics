@@ -162,16 +162,15 @@ def run():
     DeltaTableWriter(
         spark=spark,
         table_name=config["tables"]["bronze_fred_macro_indicators"]
-        ).overwrite(fact_df)
+        ).overwrite_schema(fact_df)
     
     DeltaTableWriter(
         spark=spark,
         table_name=config["tables"]["bronze_fred_macro_indicator_metadata"]
-        ).overwrite(dim_df)
+        ).overwrite_schema(dim_df)
     
     logger.info("Fred pipeline api to bronze finished successfully")
     
 if __name__ == "__main__":
     run()
-
 
