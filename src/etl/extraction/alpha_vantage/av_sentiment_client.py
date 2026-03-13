@@ -27,13 +27,13 @@ class AlphaVantageSentimentClient:
     def _build_url(
         self,
         ticker: str,
-        time_from: Optional[str] = None
-        time_to: Optional[str] = None
+        time_from: Optional[str] = None,
+        time_to: Optional[str] = None,
         sort: str = "LATEST"
     ) -> str:
         
         params = {
-            "funtion": "NEWS_SENTIMENT",
+            "function": "NEWS_SENTIMENT",
             "tickers": ticker,
             "limit": self.articles_per_request,
             "sort": sort,
@@ -45,7 +45,7 @@ class AlphaVantageSentimentClient:
             params["time_to"] = time_to
 
         query = "&".join(f"{k}={v}" for k, v in params.items())
-        return f"{self.base_url}?{query}
+        return (f"{self.base_url}?{query}")
     
     # ---------- public API ----------
 

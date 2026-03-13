@@ -59,3 +59,7 @@ alpha_vantage:
   rate_limit_per_min: 5
   articles_per_request: 200
   window_refresh_months: 12
+  topics:
+    - technology
+    - economy
+    - finance

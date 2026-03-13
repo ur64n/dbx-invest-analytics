@@ -3,7 +3,7 @@ from zoneinfo import ZoneInfo
 from typing import Optional
 
 from pyspark.sql import SparkSession
-from pyspark.dbutils import DButils
+from pyspark.dbutils import DBUtils
 
 from src.config.logger import get_logger
 from src.config.config_loader import load_config
@@ -55,7 +55,7 @@ def run():
         and spark.table(silver_av_sentiment).limit(1).count() > 0
     )
     if not has_data:
-        obseration_start = None
+        observation_start = None
     else:
         observation_start = (
             datetime.utcnow() - timedelta(days=30 * refresh_window_months)
@@ -74,14 +74,14 @@ def run():
 
     #parser = AlphaVantageSentimentParser()
 
-    all_rows; list[dict] = []
+    all_rows: list[dict] = []
     success_count = 0
     failure_count = 0
 
     for symbol in symbols:
         try:
             raw_json = client.fetch_sentiment(
-                ticker=symbol
+                ticker=symbol,
                 limit=limit_per_request,
             )
 
