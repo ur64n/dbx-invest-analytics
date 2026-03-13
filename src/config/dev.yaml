@@ -17,11 +17,13 @@ tables:
   bronze_fred_macro_indicators: bronze.fred_macro_indicators
   bronze_fred_macro_indicator_metadata: bronze.fred_macro_metadata_indicators
   bronze_ohlcv: bronze.ohlcv_indicators
+  bronze_av_sentiment: bronze.av_sentiment
   silver_qqq: silver.qqq_entities
   silver_qqq_categoties: silver.qqq_etf_categories
   silver_fred_macro_indicators: silver.fred_macro_indicators
   silver_fred_macro_indicator_metadata: silver.fred_macro_metadata_indicators
   silver_ohlcv: silver.ohlcv_indicators
+  silver_av_sentiment: silver.av_sentiment
   gold_ohlcv_with_dimension: gold.ohlcv_with_dimension
   gold_fred_with_dimension: gold.fred_with_dimension
 
@@ -39,7 +41,7 @@ fred:
     - T10YIE
   rate_limit_per_second: 2
   window_refresh_months: 12
-
+  
 # ---------- yfinance ----------
 yfinance:
   start_date: 2010-01-01
@@ -56,4 +58,4 @@ alpha_vantage:
   base_url: https://www.alphavantage.co/query
   rate_limit_per_min: 5
   articles_per_request: 200
-  
+  window_refresh_months: 12

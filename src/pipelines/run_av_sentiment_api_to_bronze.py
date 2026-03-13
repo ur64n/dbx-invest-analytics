@@ -25,11 +25,14 @@ def run():
     api_key = dbutils.secrets.get("my-scope","API_KEY_AV")
 
     # ---------- parameters ----------
-    rate_limit = config["alpha_vantage"]["rate_limit_per_min"]
-    limit_per_request = config["alpha_vantage"]["articles_per_request"]
-    base_url = config["alpha_vantage"]["base_url"]
+    refresh_window_months = config["alpha_vantage"]["window_refresh_months"]
+
 
     run_ts = datetime.now(ZoneInfo("Europe/Warsaw"))
+
+    # ---------- tables ----------
+    bronze_av_sentiment = config["tables"]["bronze_av_sentiment"]
+    silver_av_sentiment = config["tables"]["silver_av_sentiment"]
 
     # ---------- load symbols from silver_qqq ----------
     entities_df = DeltaTableExtractor(
@@ -43,6 +46,25 @@ def run():
     ]
 
     logger.info(f"Total symbols to fetch sentiment for {len(symbols)}")
+
+    # ---------- window refresh logic ----------
+    exists = spark.catalog.tableExists(silver_av_sentiment)
+
+    has_data = (
+        exists
+        and spark.table(silver_av_sentiment).limit(1).count() > 0
+    )
+    if not has_data:
+        obseration_start = None
+    else:
+        observation_start = (
+            datetime.utcnow() - timedelta(days=30 * refresh_window_months)
+        ).strftime("%Y-%m-%d")
+
+    logger.info(
+        f"Extraction mode: {'BOOTSTRAP' if not has_data else 'REFRESH'} | "
+        f"Observation start date = {observation_start}"
+    )
 
     # ---------- extraction + parsing ----------
     client = AlphaVantageSentimentClient(
