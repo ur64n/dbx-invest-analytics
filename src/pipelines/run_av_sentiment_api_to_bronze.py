@@ -1,9 +1,10 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 from zoneinfo import ZoneInfo
 from typing import Optional
 
 from pyspark.sql import SparkSession
 from pyspark.dbutils import DBUtils
+from pyspark.sql.functions import col
 
 from src.config.logger import get_logger
 from src.config.config_loader import load_config
@@ -21,7 +22,7 @@ def run():
     config = load_config()
 
     # ---------- secrets ----------
-    dbutils = DButils(spark)
+    dbutils = DBUtils(spark)
     api_key = dbutils.secrets.get("my-scope","API_KEY_AV")
 
     # ---------- parameters ----------
@@ -34,18 +35,26 @@ def run():
     bronze_av_sentiment = config["tables"]["bronze_av_sentiment"]
     silver_av_sentiment = config["tables"]["silver_av_sentiment"]
 
-    # ---------- load symbols from silver_qqq ----------
+    # ---------- load symbols ----------
     entities_df = DeltaTableExtractor(
         spark=spark,
-        table_name=config["tables"]["silver_qqq"]
+        table_name=config["tables"]["ohlcv_with_dimension"]
     ).read()
 
     symbols = [
         row["symbol"].upper()
-        for row in entities_df.select("symbol").distinct().collect()
+        for row in (
+            entities_df
+            .filter(col("sector") == "technology")
+            .orderBy(col("percent_holding").desc())
+            .select("symbol")
+            .distinct()
+            .limit(25)
+            .collect()
+        )
     ]
 
-    tickers = ",".join(symbol)
+    tickers = ",".join(symbols)
 
     logger.info(f"Total symbols to fetch sentiment for {len(symbols)}")
 
@@ -78,9 +87,11 @@ def run():
 
     all_rows: list[dict] = []
 
-    raw_json = client.fetch_sentiment(
-        tickers=tickers,
-        )
+    for symbol in tickers:
+        try:
+            raw_json = client.fetch_sentiment(
+                observation_start=observation_start
+                )
 
 
 

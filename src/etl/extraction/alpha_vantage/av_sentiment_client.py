@@ -28,7 +28,7 @@ class AlphaVantageSentimentClient:
     def _build_url(
         self,
         ticker: str,
-        time_from: Optional[str] = None,
+        time_from: Optional[str],
         sort: str = "LATEST"
     ) -> str:
         
@@ -51,8 +51,33 @@ class AlphaVantageSentimentClient:
     def fetch_sentiment(
         self,
         ticker: str,
-        time_from: Optional[str] = None,
-        limit: int = 
+        time_from: Optional[str],
     )
 
-    url = _build_url(ticker, )
+    url = self._build_url(ticker, time_from)
+
+    logger.info(f"Fetching sentiment data for {ticker}")
+
+    self._rate_limit()
+
+    response = requests.get(url, timeout=30)
+    response.raise_for_status()
+
+    data = response.json()
+
+    if "Note" in data or "Information" in data:
+        msg = data.get("Note") or data.get("Information")
+        logger.warning(f"API limit reached for {ticker}: {msg}")
+            return {"feed": [], "_rate_limited": True}
+ 
+    if "Error Message" in data:
+        logger.error(f"API error for {ticker}: {data['Error Message']}")
+        return {"feed": [], "_error": data["Error Message"]}
+    
+    feed = data.get("feed", [])
+
+    logger.info(f"Fetched {len(feed)} articles for {ticker}")
+
+    return data
+
+
