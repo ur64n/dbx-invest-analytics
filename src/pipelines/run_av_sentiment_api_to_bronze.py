@@ -9,6 +9,8 @@ from pyspark.sql.functions import col
 from src.config.logger import get_logger
 from src.config.config_loader import load_config
 
+from src.etl.schema.av_schema import av_schema
+
 from src.etl.extraction.delta_table_extractor import DeltaTableExtractor
 from src.etl.extraction.alpha_vantage.av_sentiment_clinet import AlphaVantageSentimentClient
 
@@ -91,6 +93,11 @@ def run():
                 ticker=symbol,
                 time_from=observation_start
                 )
+            
+            all_rows.extend(raw_json.get("feed",[]))
+
+
+    
 
 if __name__ == "__main__":
     run()
