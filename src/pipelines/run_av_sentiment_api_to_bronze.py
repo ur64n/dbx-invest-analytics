@@ -54,8 +54,6 @@ def run():
         )
     ]
 
-    tickers = ",".join(symbols)
-
     logger.info(f"Total symbols to fetch sentiment for {len(symbols)}")
 
     # ---------- window refresh logic ----------
@@ -70,7 +68,7 @@ def run():
     else:
         observation_start = (
             datetime.utcnow() - timedelta(days=30 * refresh_window_months)
-        ).strftime("%Y-%m-%d")
+        ).strftime("%Y%m%dT0000")
 
     logger.info(
         f"Extraction mode: {'BOOTSTRAP' if not has_data else 'REFRESH'} | "
@@ -87,13 +85,12 @@ def run():
 
     all_rows: list[dict] = []
 
-    for symbol in tickers:
+    for symbol in symbols:
         try:
             raw_json = client.fetch_sentiment(
-                observation_start=observation_start
+                ticker=symbol,
+                time_from=observation_start
                 )
-
-
 
 if __name__ == "__main__":
     run()
