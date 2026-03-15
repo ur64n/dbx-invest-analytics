@@ -16,4 +16,11 @@ class AVValidator:
         if missing:
             raise ValueError(f"Missing required columns: {missing}")
 
+    @staticmethod
+    def validate_not_empty(df: DataFrame) -> None:
+        logger.info("Validating AV dataset is not empty")
+
+        if df.limit(1).count() == 0:
+            raise ValueError("AV dataset is empty")
+
     
