@@ -23,4 +23,3 @@ class AVValidator:
         if df.limit(1).count() == 0:
             raise ValueError("AV dataset is empty")
 
-    

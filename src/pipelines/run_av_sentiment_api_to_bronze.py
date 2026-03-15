@@ -14,6 +14,8 @@ from src.etl.schema.av_schema import av_schema
 from src.etl.extraction.delta_table_extractor import DeltaTableExtractor
 from src.etl.extraction.alpha_vantage.av_sentiment_clinet import AlphaVantageSentimentClient
 from src.etl.transformations.av_json_parser import AvJsonParser
+from src.etl.validation.av_sentiment_validation import AVValidator
+from src.etl.write.delta_table_writer import DeltaTableWriter
 
 logger = get_logger("av_sentiment_api_to_bronze")
 
@@ -100,10 +102,17 @@ def run():
 
 
     parsed_rows = list(AvJsonParser.parse(all_rows))
-
     df = spark.createDataFrame(parsed_rows, schema=av_schema)
-    
 
+    # ---------- Validation ----------
+    AVValidator.validate_schema(df)
+    AVValidator.validate_not_empty(df)
+
+    # ---------- Write ----------
+    DeltaTableWriter(
+        spark=spark,
+        table_name=bronze_av_sentiment
+    ).overwrite_schema(df)
 
 if __name__ == "__main__":
     run()

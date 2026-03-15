@@ -27,7 +27,6 @@ BRONZE_REQUIRED_COLUMNS = {
     "published_at",
     "sentiment_score",
     "sentiment_label",
-    "source_api",
 }
 
 # ---------- silver (daily aggregation per ticker) ----------

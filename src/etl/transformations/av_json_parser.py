@@ -18,8 +18,8 @@ class AvJsonParser:
                     "published_at": article["time_published"],
                     "source": article["source"],
                     "title": article["title"],
-                    "relevance_score": ticker_data["relevance_score"],
-                    "sentiment_score": ticker_data["ticker_sentiment_score"],
+                    "relevance_score": float(ticker_data["relevance_score"]),
+                    "sentiment_score": float(ticker_data["ticker_sentiment_score"]),
                     "sentiment_label": ticker_data["ticker_sentiment_label"],
                     "overall_sentiment_score": article["overall_sentiment_score"],
                     "overall_sentiment_label": article["overall_sentiment_label"]
