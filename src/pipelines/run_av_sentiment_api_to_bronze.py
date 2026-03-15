@@ -13,6 +13,7 @@ from src.etl.schema.av_schema import av_schema
 
 from src.etl.extraction.delta_table_extractor import DeltaTableExtractor
 from src.etl.extraction.alpha_vantage.av_sentiment_clinet import AlphaVantageSentimentClient
+from src.etl.transformations.av_json_parser import AvJsonParser
 
 logger = get_logger("av_sentiment_api_to_bronze")
 
@@ -83,8 +84,6 @@ def run():
         api_key=api_key
     )
 
-    #parser = AlphaVantageSentimentParser()
-
     all_rows: list[dict] = []
 
     for symbol in symbols:
@@ -95,9 +94,16 @@ def run():
                 )
             
             all_rows.extend(raw_json.get("feed",[]))
+        
+        except Exception as e:
+            logger.error(f"Extraction failder for {symbol}", exc_info=True)
 
 
+    parsed_rows = list(AvJsonParser.parse(all_rows))
+
+    df = spark.createDataFrame(parsed_rows, schema=av_schema)
     
+
 
 if __name__ == "__main__":
     run()

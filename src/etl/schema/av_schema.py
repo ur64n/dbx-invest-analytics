@@ -20,7 +20,6 @@ av_sentiment_bronze_schema = StructType([
     StructField("sentiment_label", StringType(), True),
     StructField("overall_sentiment_score", DoubleType(), True),
     StructField("overall_sentiment_label", StringType(), True),
-    StructField("source_api", StringType(), False),
 ])
 
 BRONZE_REQUIRED_COLUMNS = {
