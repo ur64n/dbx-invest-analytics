@@ -15,7 +15,7 @@ class AvJsonParser:
             for ticker_data in article["ticker_sentiment"]:
                 yield {
                     "symbol": ticker_data["ticker"],
-                    "published_at": article["time_published"],
+                    "published_at": datetime.strptime(article["time_published"], "%Y%m%dT%H%M%S"),
                     "source": article["source"],
                     "title": article["title"],
                     "relevance_score": float(ticker_data["relevance_score"]),

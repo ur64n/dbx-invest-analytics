@@ -9,10 +9,10 @@ from pyspark.sql.functions import col
 from src.config.logger import get_logger
 from src.config.config_loader import load_config
 
-from src.etl.schema.av_schema import av_schema
+from src.etl.schema.av_schema import av_sentiment_bronze_schema
 
 from src.etl.extraction.delta_table_extractor import DeltaTableExtractor
-from src.etl.extraction.alpha_vantage.av_sentiment_clinet import AlphaVantageSentimentClient
+from src.etl.extraction.alpha_vantage.av_sentiment_client import AlphaVantageSentimentClient
 from src.etl.transformations.av_json_parser import AvJsonParser
 from src.etl.validation.av_sentiment_validation import AVValidator
 from src.etl.write.delta_table_writer import DeltaTableWriter
@@ -33,9 +33,6 @@ def run():
     # ---------- parameters ----------
     refresh_window_months = config["alpha_vantage"]["window_refresh_months"]
 
-
-    run_ts = datetime.now(ZoneInfo("Europe/Warsaw"))
-
     # ---------- tables ----------
     bronze_av_sentiment = config["tables"]["bronze_av_sentiment"]
     silver_av_sentiment = config["tables"]["silver_av_sentiment"]
@@ -43,7 +40,7 @@ def run():
     # ---------- load symbols ----------
     entities_df = DeltaTableExtractor(
         spark=spark,
-        table_name=config["tables"]["ohlcv_with_dimension"]
+        table_name=config["tables"]["gold_ohlcv_with_dimension"]
     ).read()
 
     symbols = [
@@ -98,11 +95,10 @@ def run():
             all_rows.extend(raw_json.get("feed",[]))
         
         except Exception as e:
-            logger.error(f"Extraction failder for {symbol}", exc_info=True)
-
+            logger.error(f"Extraction failed for {symbol}", exc_info=True)
 
     parsed_rows = list(AvJsonParser.parse(all_rows))
-    df = spark.createDataFrame(parsed_rows, schema=av_schema)
+    df = spark.createDataFrame(parsed_rows, schema=av_sentiment_bronze_schema)
 
     # ---------- Validation ----------
     AVValidator.validate_schema(df)

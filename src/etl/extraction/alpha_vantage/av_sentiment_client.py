@@ -43,7 +43,7 @@ class AlphaVantageSentimentClient:
     
     # ---------- public API ----------
 
-    def fetch_sentiment(self,ticker: str,time_from: Optional[str])
+    def fetch_sentiment(self,ticker: str,time_from: Optional[str]) -> dict:
 
         url = self._build_url(ticker, time_from)
 
