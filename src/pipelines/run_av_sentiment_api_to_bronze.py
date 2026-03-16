@@ -30,12 +30,8 @@ def run():
     dbutils = DBUtils(spark)
     api_key = dbutils.secrets.get("my-scope","API_KEY_AV")
 
-    # ---------- parameters ----------
-    refresh_window_months = config["alpha_vantage"]["window_refresh_months"]
-
     # ---------- tables ----------
     bronze_av_sentiment = config["tables"]["bronze_av_sentiment"]
-    silver_av_sentiment = config["tables"]["silver_av_sentiment"]
 
     # ---------- load symbols ----------
     entities_df = DeltaTableExtractor(
@@ -58,23 +54,24 @@ def run():
 
     logger.info(f"Total symbols to fetch sentiment for {len(symbols)}")
 
-    # ---------- window refresh logic ----------
-    exists = spark.catalog.tableExists(bronze_av_sentiment)
+    # ---------- coverage check per symbol ----------
+    coverage = {}
+    if spark.catalog.tableExists(bronze_av_sentiment):
+        coverage = {
+            row["symbol"]: row["max_date"]
+            for row in spark.table(bronze_av_sentiment)
+            .groupBy("symbol")
+            .agg({"published_at": "max"})
+            .withColumnRenamed("max(published_at)", "max_date")
+            .collect()
+        }
 
-    has_data = (
-        exists
-        and spark.table(bronze_av_sentiment).limit(1).count() > 0
-    )
-    if not has_data:
-        observation_start = None
-    else:
-        max_date = spark.table(bronze_av_sentiment) \
-            .selectExpr("max(published_at)").collect()[0][0]
-        observation_start = max_date.strftime("%Y%m%dT%H%M%S")
+    # ---------- sort: bootstrap symbols first ----------
+    symbols.sort(key=lambda s: 0 if s not in coverage else 1)
 
     logger.info(
-        f"Extraction mode: {'BOOTSTRAP' if not has_data else 'REFRESH'} | "
-        f"Observation start date = {observation_start}"
+        f"Coverage: {len(coverage)} symbols in bronze | "
+        f"Bootstrap needed: {sum(1 for s in symbols if s not in coverage)}"
     )
 
     # ---------- extraction + parsing ----------
@@ -87,17 +84,22 @@ def run():
 
     for symbol in symbols:
         try:
+            max_date = coverage.get(symbol)
+            time_from = None if max_date is None else max_date.strftime("%Y%m%dT%H%M")
+
+            logger.info(f"{'BOOTSTRAP' if max_date is None else 'REFRESH'} for {symbol}")
+
             raw_json = client.fetch_sentiment(
                 ticker=symbol,
-                time_from=observation_start
-                )
-            
+                time_from=time_from
+            )
+
             if raw_json.get("_rate_limited"):
-                logger.warning("Rate limit hit — stopping extraction")
+                logger.warning(f"Rate limit hit at {symbol} — stopping extraction")
                 break
-            
-            all_rows.extend(raw_json.get("feed",[]))
-        
+
+            all_rows.extend(raw_json.get("feed", []))
+
         except Exception as e:
             logger.error(f"Extraction failed for {symbol}", exc_info=True)
 
@@ -112,7 +114,7 @@ def run():
     DeltaTableWriter(
         spark=spark,
         table_name=bronze_av_sentiment
-    ).overwrite_schema(df)
+    ).upsert(df, merge_keys=["symbol", "published_at", "title"])
 
 if __name__ == "__main__":
     run()
