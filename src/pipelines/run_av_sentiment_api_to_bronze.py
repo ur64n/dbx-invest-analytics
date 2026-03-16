@@ -51,7 +51,7 @@ def run():
             .orderBy(col("percent_holding").desc())
             .select("symbol")
             .distinct()
-            .limit(25)
+            .limit(50)
             .collect()
         )
     ]
@@ -59,18 +59,18 @@ def run():
     logger.info(f"Total symbols to fetch sentiment for {len(symbols)}")
 
     # ---------- window refresh logic ----------
-    exists = spark.catalog.tableExists(silver_av_sentiment)
+    exists = spark.catalog.tableExists(bronze_av_sentiment)
 
     has_data = (
         exists
-        and spark.table(silver_av_sentiment).limit(1).count() > 0
+        and spark.table(bronze_av_sentiment).limit(1).count() > 0
     )
     if not has_data:
         observation_start = None
     else:
-        observation_start = (
-            datetime.utcnow() - timedelta(days=30 * refresh_window_months)
-        ).strftime("%Y%m%dT0000")
+        max_date = spark.table(bronze_av_sentiment) \
+            .selectExpr("max(published_at)").collect()[0][0]
+        observation_start = max_date.strftime("%Y%m%dT%H%M%S")
 
     logger.info(
         f"Extraction mode: {'BOOTSTRAP' if not has_data else 'REFRESH'} | "
@@ -92,12 +92,16 @@ def run():
                 time_from=observation_start
                 )
             
+            if raw_json.get("_rate_limited"):
+                logger.warning("Rate limit hit — stopping extraction")
+                break
+            
             all_rows.extend(raw_json.get("feed",[]))
         
         except Exception as e:
             logger.error(f"Extraction failed for {symbol}", exc_info=True)
 
-    parsed_rows = list(AvJsonParser.parse(all_rows))
+    parsed_rows = list(AvJsonParser.parse(all_rows, set(symbols)))
     df = spark.createDataFrame(parsed_rows, schema=av_sentiment_bronze_schema)
 
     # ---------- Validation ----------
