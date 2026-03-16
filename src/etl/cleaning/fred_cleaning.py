@@ -14,7 +14,7 @@ class FredCleaner:
 
     @staticmethod
     def standardize_columns(df: DataFrame) -> DataFrame:
-        logger.info("Cleaning FRED dataset")
+        logger.info("Standardizing FRED dataset columns")
 
         # --- column standardization ---
         df = df.select(
@@ -23,5 +23,6 @@ class FredCleaner:
             col("value").cast("double").alias("value"),
         )
 
-        logger.info("FRED cleaning finished")
+        logger.info("Standardizing FRED dataset columns finished")
+        
         return df

@@ -3,6 +3,7 @@ from src.config.logger import get_logger
 from src.config.config_loader import load_config
 
 from src.etl.extraction.delta_table_extractor import DeltaTableExtractor
+from src.etl.cleaning.av_sentiment_cleaning import AVSentimentCleaner
 
 logger = get_logger("av_sentiment_bronze_to_silver")
 
@@ -20,6 +21,7 @@ def run():
     ).read()
 
     # ---------- cleaning ----------
+    df = AVSentimentCleaner.standardize_columns(df)
     
 
 if __name__ == "__main__":

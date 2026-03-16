@@ -15,18 +15,18 @@ av_sentiment_bronze_schema = StructType([
     StructField("published_at", TimestampType(), False),
     StructField("source", StringType(), True),
     StructField("title", StringType(), True),
-    StructField("relevance_score", DoubleType(), True),
-    StructField("sentiment_score", DoubleType(), True),
-    StructField("sentiment_label", StringType(), True),
-    StructField("overall_sentiment_score", DoubleType(), True),
-    StructField("overall_sentiment_label", StringType(), True),
+    StructField("ticker_relevance_score", DoubleType(), True),
+    StructField("ticker_sentiment_score", DoubleType(), True),
+    StructField("ticker_sentiment_label", StringType(), True),
+    StructField("article_overall_sentiment_score", DoubleType(), True),
+    StructField("article_overall_sentiment_label", StringType(), True),
 ])
 
 BRONZE_REQUIRED_COLUMNS = {
     "symbol",
     "published_at",
-    "sentiment_score",
-    "sentiment_label",
+    "ticker_sentiment_score",
+    "ticker_sentiment_label",
 }
 
 # ---------- silver (daily aggregation per ticker) ----------

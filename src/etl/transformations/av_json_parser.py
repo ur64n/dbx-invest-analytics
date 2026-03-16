@@ -21,9 +21,9 @@ class AvJsonParser:
                     "published_at": datetime.strptime(article["time_published"], "%Y%m%dT%H%M%S"),
                     "source": article["source"],
                     "title": article["title"],
-                    "relevance_score": float(ticker_data["relevance_score"]),
-                    "sentiment_score": float(ticker_data["ticker_sentiment_score"]),
-                    "sentiment_label": ticker_data["ticker_sentiment_label"],
-                    "overall_sentiment_score": article["overall_sentiment_score"],
-                    "overall_sentiment_label": article["overall_sentiment_label"]
+                    "ticker_relevance_score": float(ticker_data["relevance_score"]),
+                    "ticker_sentiment_score": float(ticker_data["ticker_sentiment_score"]),
+                    "ticker_sentiment_label": ticker_data["ticker_sentiment_label"],
+                    "article_overall_sentiment_score": article["overall_sentiment_score"],
+                    "article_overall_sentiment_label": article["overall_sentiment_label"]
                 }
