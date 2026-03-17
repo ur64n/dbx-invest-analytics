@@ -38,10 +38,7 @@ class DeltaTableWriter:
             [f"target.{key} = source.{key}" for key in merge_keys]
         )
 
-        delta_table.alias("target").merge(
-            df.alias("source"),
-            merge_condition
-        ) \
+        delta_table.alias("target").merge(df.alias("source"),merge_condition) \
         .whenMatchedUpdateAll() \
         .whenNotMatchedInsertAll() \
         .execute()

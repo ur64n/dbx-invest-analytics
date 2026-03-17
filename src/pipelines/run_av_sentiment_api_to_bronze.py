@@ -116,5 +116,7 @@ def run():
         table_name=bronze_av_sentiment
     ).upsert(df, merge_keys=["symbol", "published_at", "title"])
 
+    logger.info("Aplha Vantage sentiment pipeline API to bronze finished successfully")
+
 if __name__ == "__main__":
     run()
