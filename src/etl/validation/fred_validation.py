@@ -7,6 +7,8 @@ from src.etl.schema.fred_schema import REQUIRED_COLUMNS
 
 logger = get_logger("fred_validation")
 
+#TODO: Zmienić z .count() na .head(1)
+
 class FredValidator:
 
     @staticmethod

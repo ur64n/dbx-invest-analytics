@@ -29,6 +29,14 @@ BRONZE_REQUIRED_COLUMNS = {
     "ticker_sentiment_label",
 }
 
+ALLOWED_VALUES = {
+    "bullish",
+    "somewhat-bullish",
+    "neutral",
+    "somewhat-bearish",
+    "bearish"
+}
+
 # ---------- silver (daily aggregation per ticker) ----------
 
 av_sentiment_silver_schema = StructType([
