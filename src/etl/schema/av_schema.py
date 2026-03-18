@@ -42,12 +42,14 @@ ALLOWED_VALUES = {
 av_sentiment_silver_schema = StructType([
     StructField("symbol", StringType(), False),
     StructField("date", DateType(), False),
-    StructField("avg_sentiment_score", DoubleType(), True),
     StructField("article_count", IntegerType(), True),
+    StructField("avg_sentiment_score", DoubleType(), True),
     StructField("avg_relevance_score", DoubleType(), True),
     StructField("bullish_count", IntegerType(), True),
-    StructField("bearish_count", IntegerType(), True),
+    StructField("somewhat_bullish_count", IntegerType(), True),
     StructField("neutral_count", IntegerType(), True),
+    StructField("somewhat_bearish_count", IntegerType(), True),
+    StructField("bearish_count", IntegerType(), True),
     StructField("source_api", StringType(), False),
 ])
 
