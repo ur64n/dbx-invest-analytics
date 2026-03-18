@@ -8,7 +8,7 @@ class AVSentimentAggregator:
 
     @staticmethod
     def aggregate_daily(df: DataFrame) -> DataFrame:
-        logger.info("Starting aggregation av sentiment data... per day?")
+        logger.info("Starting aggregation daily sentiment per symbol: counts articles, averages scores, and computes sentiment label distribution")
 
         return df.groupBy("symbol","date").agg(
                 count("*").alias("article_count"),
@@ -21,3 +21,5 @@ class AVSentimentAggregator:
                 sum(when(col("ticker_sentiment_label") == "bearish", 1).otherwise(0)).alias("bearish_count"),
                 lit("alpha_vantage").alias("source_api")
             )
+        
+        logger.info("Finished aggregation: daily sentiment per symbol and date")
