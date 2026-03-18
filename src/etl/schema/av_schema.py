@@ -39,7 +39,7 @@ ALLOWED_VALUES = {
 
 # ---------- silver (daily aggregation per ticker) ----------
 
-av_sentiment_silver_schema = StructType([
+av_sentiment_gold_schema = StructType([
     StructField("symbol", StringType(), False),
     StructField("date", DateType(), False),
     StructField("article_count", IntegerType(), True),
@@ -53,7 +53,7 @@ av_sentiment_silver_schema = StructType([
     StructField("source_api", StringType(), False),
 ])
 
-SILVER_REQUIRED_COLUMNS = {
+GOLD_REQUIRED_COLUMNS = {
     "symbol",
     "date",
     "avg_sentiment_score",

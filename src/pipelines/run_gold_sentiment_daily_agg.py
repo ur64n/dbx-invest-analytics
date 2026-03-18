@@ -2,8 +2,12 @@ from pyspark.sql import SparkSession
 from src.config.config_loader import load_config
 from src.config.logger import get_logger
 
+from src.etl.schema.av_schema import GOLD_REQUIRED_COLUMNS
+
 from src.etl.extraction.delta_table_extractor import DeltaTableExtractor
 from src.etl.transformations.av_sentiment_aggregation import AVSentimentAggregator
+from src.etl.utils.validation_helper import ValidationHelper
+from src.etl.validation.gold_sentiment_validation import GoldAVVSentimentalidator
 
 logger = get_logger("gold_sentiment_daily_agg")
 
@@ -24,7 +28,10 @@ def run():
     df = AVSentimentAggregator.aggregate_daily(df)
 
     # ---------- validation ----------
-    
+    ValidationHelper.validate_not_empty(df, context="")
+    ValidationHelper.validate_schema(df, GOLD_REQUIRED_COLUMNS, context="gold sentiment aggregated df")
+
+
 
 if __name__ == "__main__":
     run()
