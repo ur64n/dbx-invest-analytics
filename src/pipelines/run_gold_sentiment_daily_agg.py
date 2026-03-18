@@ -14,8 +14,12 @@ def run():
     config = load_config()
 
     # ---------- read data ----------
-    
+    DeltaTableExtractor(
+        spark=spark,
+        table_name=config["tables"]["silver_av_sentiment"]
+    ).read()
 
+    # ----------  ----------
 
 if __name__ == "__main__":
     run()
