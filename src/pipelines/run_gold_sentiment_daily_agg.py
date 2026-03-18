@@ -8,6 +8,7 @@ from src.etl.extraction.delta_table_extractor import DeltaTableExtractor
 from src.etl.transformations.av_sentiment_aggregation import AVSentimentAggregator
 from src.etl.utils.validation_helper import ValidationHelper
 from src.etl.validation.gold_sentiment_validation import GoldAVSentimentalidator
+from src.etl.write.delta_table_writer import DeltaTableWriter
 
 logger = get_logger("gold_sentiment_daily_agg")
 
@@ -34,7 +35,12 @@ def run():
     GoldAVSentimentalidator.validate_domain_rules(df)
     
     # ---------- write ----------
-    
+    DeltaTableWriter(
+        table_name=config["tables"]["gold_av_sentiment_aggregated"],
+        spark=spark
+    ).overwrite(df)
+
+    logger.info("Gold sentiment daily aggegation pipeline finished successfully")
 
 if __name__ == "__main__":
     run()

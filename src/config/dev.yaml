@@ -26,6 +26,7 @@ tables:
   silver_av_sentiment: silver.av_sentiment
   gold_ohlcv_with_dimension: gold.ohlcv_with_dimension
   gold_fred_with_dimension: gold.fred_with_dimension
+  gold_av_sentiment_aggregated: gold.av_sentiment_aggregated
 
 # ---------- fred ----------
 fred:
