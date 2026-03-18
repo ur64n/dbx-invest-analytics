@@ -20,6 +20,8 @@ def download_ohlcv(spark, symbols: list, start_date: str, end_date: str):
         f"from {start_date} to {end_date}"
     )
 
+    empty_count = 0
+
     for symbol in symbols:
 
         df = yf.download(
@@ -34,6 +36,8 @@ def download_ohlcv(spark, symbols: list, start_date: str, end_date: str):
         if df.empty:
             logger.warning(f"Empty dataframe for {symbol}")
             continue
+
+        empty_count += 1
 
         # reset index (Date -> column)
         df = df.reset_index()
@@ -55,7 +59,7 @@ def download_ohlcv(spark, symbols: list, start_date: str, end_date: str):
             )
         
         # unknown columns detection
-        unknown_cols = set(df.columns) - set(df.expected_cols)
+        unknown_cols = set(df.columns) - set(expected_cols)
         if unknown_cols:
             logger.warning(f"Unknown columns detected in source: {unknown_cols} - schema may have changed")
 

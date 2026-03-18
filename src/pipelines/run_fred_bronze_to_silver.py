@@ -51,5 +51,7 @@ def run():
         table_name=config["tables"]["silver_fred_macro_indicator_metadata"]
     ).upsert(dim_df, merge_keys=["indicator_id"])
 
+    logger.info("Fred Pipeline bronze to silver finished successfully")
+
 if __name__ == "__main__":
     run()

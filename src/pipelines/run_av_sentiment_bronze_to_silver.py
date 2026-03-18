@@ -39,7 +39,7 @@ def run():
         spark=spark
     ).upsert(df, merge_keys=["symbol", "published_at", "title"])
 
-    logger.info("Aplha Vantage sentiment pipeline API to bronze finished successfully")
+    logger.info("Aplha Vantage sentiment pipeline bronze to silver finished successfully")
 
 if __name__ == "__main__":
     run()
