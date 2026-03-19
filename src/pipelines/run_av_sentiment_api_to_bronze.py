@@ -14,6 +14,7 @@ from src.etl.schema.av_schema import av_sentiment_bronze_schema
 from src.etl.extraction.delta_table_extractor import DeltaTableExtractor
 from src.etl.extraction.alpha_vantage.av_sentiment_client import AlphaVantageSentimentClient
 from src.etl.transformations.av_json_parser import AvJsonParser
+from src.etl.cleaning.av_sentiment_cleaning import AVSentimentCleaner
 from src.etl.validation.av_sentiment_validation import AVValidator
 from src.etl.write.delta_table_writer import DeltaTableWriter
 
@@ -109,6 +110,9 @@ def run():
     # ---------- Validation ----------
     AVValidator.validate_schema(df)
     AVValidator.validate_not_empty(df)
+
+    # ---------- Cleaning ----------
+    df = AVSentimentCleaner.drop_duplicates(df, ["symbol", "published_at", "title"])
 
     # ---------- Write ----------
     DeltaTableWriter(

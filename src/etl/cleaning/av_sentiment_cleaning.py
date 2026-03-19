@@ -12,9 +12,21 @@ logger = get_logger("av_sentiment_cleaning")
 class AVSentimentCleaner:
 
     @staticmethod
+    def drop_duplicates(df: DataFrame, keys: list[str]) -> DataFrame:
+        logger.info(f"Starting drop duplicates on keys columns")
+    
+        before = df.count()
+        df = df.dropDuplicates(keys)
+        after = df.count()
+    
+        if before != after:
+            logger.warning(f"Removed {before - after} duplicate rows")
+    
+        return df
+    
+    @staticmethod
     def standardize_columns(df: DataFrame) -> DataFrame:
-        logger.info("Starting clean AV Sentiment dataset columns"
-        "Start cleaning whitespaces and adjusting cannonical form")
+        logger.info("Start cleaning whitespaces and adjusting cannonical form")
         
         df = (
             df.withColumn("symbol", lower(trim(col("symbol"))))
@@ -23,10 +35,6 @@ class AVSentimentCleaner:
             .withColumn("ticker_sentiment_label", lower(trim(col("ticker_sentiment_label"))))
             .withColumn("article_overall_sentiment_label", lower(trim(col("article_overall_sentiment_label"))))
         )
-
-        logger.info("Start dropping duplicates in key columns")
-
-        df = df.dropDuplicates(["symbol", "published_at", "title"])
 
         logger.info("Standardizing AV Sentiment dataset columns finished")
 

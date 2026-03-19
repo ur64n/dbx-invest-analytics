@@ -24,6 +24,7 @@ def run():
 
     # ---------- cleaning ----------
     df = AVSentimentCleaner.standardize_columns(df)
+    df = AVSentimentCleaner.drop_duplicates(df, ["symbol", "published_at", "title"])
 
     # ---------- validation ----------
     AVValidator.validate_symbol_not_null(df)
