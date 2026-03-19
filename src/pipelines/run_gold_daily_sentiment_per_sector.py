@@ -31,10 +31,19 @@ def run():
     # ---------- enrichment ----------
     enriched_df = SentimentSectorEnricher.enrich_sector_sentiment(sector_df, sentiment_df)
 
+    total_rows = enriched_df.count()
+
+    logger.info(f"Rows before sector filter: {total_rows}")
+
     # ---------- cleaning ----------
     df = enriched_df.filter(col("sector").isNotNull())
 
+    rows = df.count()
+
+    logger.info(f"Rows after sector filter: {rows} | dropped: {total_rows - rows}")
+
     # ---------- transformation ----------
+    
 
 if __name__ == "__main__":
     run()
