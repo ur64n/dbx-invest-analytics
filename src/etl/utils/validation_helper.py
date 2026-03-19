@@ -23,3 +23,14 @@ class ValidationHelper:
             raise ValueError(f"Dataset is empty: {context}")
 
         logger.info("Dataset contains rows")
+
+    @staticmethod
+    def validate_uniqueness(df: DataFrame, key_columns: list[str]) -> None:
+        logger.info("Staring validation key columns uniqueness")
+
+        total = df.count()
+        distinct = df.select(key_columns).distinct().count()
+
+        if df.total != distinct:
+            raise ValueError(f"Duplicates in dataset on key columns: {total - distinct}")
+

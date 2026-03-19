@@ -5,7 +5,8 @@ SOURCE_SENTIMENT_COLUMNS = [
 
 SOURCE_ENTITIES_COLUMNS = [
     "symbol", 
-    "sector"
+    "sector",
+    "industry"
 ]
 
 REQUIRED_COLUMNS = {
