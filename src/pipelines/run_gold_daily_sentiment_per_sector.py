@@ -1,4 +1,5 @@
 from pyspark.sql import SparkSession
+from pyspark.sql.functions import col
 from src.config.config_loader import load_config
 from src.config.logger import get_logger
 
@@ -30,10 +31,10 @@ def run():
     # ---------- enrichment ----------
     enriched_df = SentimentSectorEnricher.enrich_sector_sentiment(sector_df, sentiment_df)
 
-    enriched_df.limit(50).display()
-
     # ---------- cleaning ----------
+    df = enriched_df.filter(col("sector").isNotNull())
 
+    # ---------- transformation ----------
 
 if __name__ == "__main__":
     run()
