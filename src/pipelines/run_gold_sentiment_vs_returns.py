@@ -5,6 +5,7 @@ from src.config.logger import get_logger
 from src.etl.schema.sentiment_vs_returns_schema import SOURCE_SENTIMENT_COLUMNS, SOURCE_OHLCV_COLUMNS
 
 from src.etl.extraction.delta_table_extractor import DeltaTableExtractor
+from src.etl.transformations.ohlcv_return_calculation import OHLCVCalculator
 
 logger = get_logger("run_gold_sentiment_vs_returns")
 
@@ -25,13 +26,11 @@ def run():
         table_name=config["tables"]["silver_ohlcv"],
         spark=spark
     ).read().select(SOURCE_OHLCV_COLUMNS)
-    
-    avdsa_df.limit(1).display()
-    ohlcv_df.limit(1).display()
 
-    # ---------- enrichment ---------- 
-    
+    # ---------- transformations ---------- 
+    ohlcv_daily_return_df = OHLCVCalculator.calculate_daily_return(ohlcv_df)
 
+    
 
 if __name__ == "__main__":
     run()
