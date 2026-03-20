@@ -3,7 +3,7 @@ from pyspark.sql.functions import col
 from src.config.config_loader import load_config
 from src.config.logger import get_logger
 
-from src.etl.schema.sentiment_sector_schema import SOURCE_SENTIMENT_COLUMNS, SOURCE_ENTITIES_COLUMNS
+from src.etl.schema.sentiment_sector_schema import SOURCE_SENTIMENT_COLUMNS, SOURCE_ENTITIES_COLUMNS, UNIQUE_KEY
 
 from src.etl.extraction.delta_table_extractor import DeltaTableExtractor
 from src.etl.enrichment.sentiment_sector_enrichment import SentimentSectorEnricher
@@ -11,7 +11,6 @@ from src.etl.transformations.sentiment_sector_aggregation import SentimentSector
 from src.etl.utils.validation_helper import ValidationHelper
 from src.etl.validation.gold_sentiment_sector_validation import GoldSentimentSectorValidator
 from src.etl.write.delta_table_writer import DeltaTableWriter
-
 
 logger = get_logger("run_gold_daily_sentiment_per_sector")
 
@@ -51,8 +50,8 @@ def run():
     df = SentimentSectorAggregator.aggregate_daily_sentiment_per_sector(df)
 
     # ---------- validation ----------
-    ValidationHelper.validate_not_empty(df)
-    ValidationHelper.validate_uniqueness(df)
+    ValidationHelper.validate_not_empty(df, context="gold_sentiment_sector_daily")
+    ValidationHelper.validate_uniqueness(df, UNIQUE_KEY)
     GoldSentimentSectorValidator.validate_negative_values(df)
     GoldSentimentSectorValidator.validate_value_ranges(df)
 

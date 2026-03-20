@@ -18,3 +18,8 @@ REQUIRED_COLUMNS = {
     "bullish_bearish_ratio"
 }
 
+UNIQUE_KEY = [
+    "sector",
+    "date",
+    "industry",
+]

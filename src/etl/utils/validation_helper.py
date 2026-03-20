@@ -29,8 +29,8 @@ class ValidationHelper:
         logger.info("Staring validation key columns uniqueness")
 
         total = df.count()
-        distinct = df.select(key_columns).distinct().count()
+        distinct = df.select(*key_columns).distinct().count()
 
-        if df.total != distinct:
+        if total != distinct:
             raise ValueError(f"Duplicates in dataset on key columns: {total - distinct}")
 
