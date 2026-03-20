@@ -34,3 +34,11 @@ class ValidationHelper:
         if total != distinct:
             raise ValueError(f"Duplicates in dataset on key columns: {total - distinct}")
 
+    @staticmethod
+    def validate_row_after_join(source_df: DataFrame, enriched_df: DataFrame) -> None:
+        logger.info("Comparing datasets total rows, before and after join")
+        
+        if source_df.count() != enriched_df.count():
+            raise ValueError("Number of rows after join is different than before")
+
+            

@@ -6,6 +6,7 @@ from src.etl.extraction.delta_table_extractor import DeltaTableExtractor
 from src.etl.enrichment.fred_dimension_enrichment import FredDimensionEnricher
 from src.etl.validation.gold_fred_validation import GoldFredValidator
 from src.etl.validation.fred_validation import FredValidator
+from src.etl.utils.validation_helper import ValidationHelper
 from src.etl.write.delta_table_writer import DeltaTableWriter
 
 logger = get_logger("gold_fred_with_dimension pipeline")
@@ -35,7 +36,7 @@ def run():
 
     # ---------- validation ----------
     FredValidator.validate_uniqueness(df)
-    GoldFredValidator.validate_row_after_join(fact_df, df)
+    ValidationHelper.validate_row_after_join(fact_df, df)
     GoldFredValidator.validate_nulls(df)
 
     # ---------- write ----------

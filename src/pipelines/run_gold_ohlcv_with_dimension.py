@@ -4,7 +4,7 @@ from src.config.logger import get_logger
 
 from src.etl.extraction.delta_table_extractor import DeltaTableExtractor
 from src.etl.enrichment.ohlcv_dimension_enrichment import OHLCVDimensionEnricher
-from src.etl.validation.gold_fred_validation import GoldFredValidator
+from src.etl.utils.validation_helper import ValidationHelper
 from src.etl.validation.gold_ohlcv_validation import GoldOHLCVValidator
 from src.etl.write.delta_table_writer import DeltaTableWriter
 
@@ -43,7 +43,7 @@ def run():
     logger.info(f"OHLCV with dimension enrichment completed")
 
     # ---------- validation ----------
-    GoldFredValidator.validate_row_after_join(ohlcv_df, df)
+    ValidationHelper.validate_row_after_join(ohlcv_df, df)
     GoldOHLCVValidator.validate_qqq_null_values(df)
     GoldOHLCVValidator.validate_benchmark_null_values(df)
 

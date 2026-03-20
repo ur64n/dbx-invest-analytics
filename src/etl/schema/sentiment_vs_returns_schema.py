@@ -13,14 +13,14 @@ SOURCE_OHLCV_COLUMNS = [
     "close"
 ]
 
-REQUIRED_COLUMNS = [
+REQUIRED_COLUMNS = {
     "symbol",
     "date",
     "close",
     "daily_return",
     "avg_sentiment_score",
     "article_count"
-]
+}
 
 KEY_COLUMNS = [
     "symbol",

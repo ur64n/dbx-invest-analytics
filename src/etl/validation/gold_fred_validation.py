@@ -7,13 +7,6 @@ logger = get_logger("gold_fred_validation")
 class GoldFredValidator:
 
     @staticmethod
-    def validate_row_after_join(fact_df: DataFrame, enriched_df: DataFrame) -> None:
-        logger.info("Comparing datasets total rows, before and after join")
-        
-        if fact_df.count() != enriched_df.count():
-            raise ValueError("Number of rows after join is different than before")
-
-    @staticmethod
     def validate_nulls(df: DataFrame) -> None:
         logger.info("Checking for nulls in joined columns")
         
