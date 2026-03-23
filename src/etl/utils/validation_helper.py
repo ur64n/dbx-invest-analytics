@@ -11,7 +11,7 @@ class ValidationHelper:
 
         missing = required_columns - set(df.columns)
         if missing:
-            raise ValueError(f"Missing columns in {context}: {missing}")
+            raise ValueError(f"Missing columns: {missing} in {context} dataset")
 
         logger.info("All required columns available in dataset")
     
@@ -20,7 +20,7 @@ class ValidationHelper:
         logger.info("Starting dataset emptiness validation")
 
         if df.limit(1).count() == 0:
-            raise ValueError(f"Dataset is empty: {context}")
+            raise ValueError(f"Dataset {context} is empty")
 
         logger.info("Dataset contains rows")
 

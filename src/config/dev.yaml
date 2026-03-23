@@ -29,6 +29,7 @@ tables:
   gold_av_sentiment_aggregated: gold.av_sentiment_aggregated
   gold_av_sentiment_sector_daily: gold.av_sentiment_sector_daily
   gold_sentiment_vs_returns: gold.sentiment_vs_returns
+  gold_sentiment_lead_lag: gold.sentiment_lead_lag
 
 # ---------- fred ----------
 fred:

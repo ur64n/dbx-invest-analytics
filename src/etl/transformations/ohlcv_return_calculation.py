@@ -1,5 +1,5 @@
 from pyspark.sql import DataFrame
-from pyspark.sql.functions import lag, col
+from pyspark.sql.functions import col, lead, lag
 from pyspark.sql.window import Window
 from src.config.logger import get_logger
 
@@ -18,5 +18,23 @@ class OHLCVCalculator:
         df = df.drop(col("prev_close"))
 
         logger.info("Daily return calculation per symbol completed")
+
+        return df
+    
+    @staticmethod
+    def calculate_forward_returns(df: DataFrame) -> DataFrame:
+        logger.info("Starting forward return calculation for T+1, T+2, T+5 horizons")
+
+        window = Window.partitionBy("symbol").orderBy("date")
+        horizons = [1, 2, 5]
+
+        for h in horizons:
+            df = df.withColumn(f"close_t{h}", lead("close", h).over(window))
+            df = df.withColumn(f"return_t{h}", (col(f"close_t{h}") - col("close")) / col("close"))
+            df = df.drop(f"close_t{h}")
+
+        df = df.filter(col("return_t5").isNotNull())
+
+        logger.info("Forward return calculation completed")
 
         return df
