@@ -62,7 +62,8 @@ yfinance:
 alpha_vantage:
   base_url: https://www.alphavantage.co/query
   rate_limit_per_min: 5
-  articles_per_request: 200
+  articles_per_request: 1000
+  time_from: "20150101T0000"
   topics:
     - technology
     - economy

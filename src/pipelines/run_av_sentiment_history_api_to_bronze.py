@@ -1,27 +1,24 @@
-from datetime import datetime, timedelta
-from zoneinfo import ZoneInfo
-from typing import Optional
-
 from pyspark.sql import SparkSession
-from pyspark.dbutils import DBUtils
-from pyspark.sql.functions import col
-
-from src.config.logger import get_logger
 from src.config.config_loader import load_config
+from src.config.logger import get_logger
 
 from src.etl.schema.av_schema import av_sentiment_bronze_schema
 
-from src.etl.extraction.delta_table_extractor import DeltaTableExtractor
-from src.etl.extraction.alpha_vantage.av_sentiment_client import AlphaVantageSentimentClient
 from src.etl.transformations.av_json_parser import AvJsonParser
 from src.etl.cleaning.av_sentiment_cleaning import AVSentimentCleaner
 from src.etl.validation.av_sentiment_validation import AVValidator
 from src.etl.write.delta_table_writer import DeltaTableWriter
 
-logger = get_logger("av_sentiment_api_to_bronze")
+from pyspark.sql.functions import col
+from pyspark.dbutils import DBUtils
+
+from src.etl.extraction.delta_table_extractor import DeltaTableExtractor
+from src.etl.extraction.alpha_vantage.av_sentiment_history_client import AVSentimentHistoryClient
+
+logger = get_logger("run_av_sentiment_history_api_to_bronze")
 
 def run():
-    logger.info("Starting Aplha Vantage sentiment pipeline API to bronze")
+    logger.info("Starting av sentiment history data api to bronze pipeline")
 
     # ---------- setup ----------
     spark = SparkSession.builder.getOrCreate()
@@ -29,12 +26,12 @@ def run():
 
     # ---------- secrets ----------
     dbutils = DBUtils(spark)
-    api_key = dbutils.secrets.get("my-scope","API_KEY_AV")
+    api_key = dbutils.secrets.get("my-scope", "API_KEY_AV")
 
     # ---------- tables ----------
     bronze_av_sentiment = config["tables"]["bronze_av_sentiment"]
 
-    # ---------- load symbols ----------
+    # ---------- load data ----------
     entities_df = DeltaTableExtractor(
         spark=spark,
         table_name=config["tables"]["gold_ohlcv_with_dimension"]
@@ -43,7 +40,7 @@ def run():
     # ---------- collect symbols ----------
     symbols = [
         row["symbol"].upper()
-        for row in (
+        for row in(
             entities_df
             .filter(col("sector") == "technology")
             .orderBy(col("percent_holding").desc())
@@ -56,28 +53,21 @@ def run():
 
     logger.info(f"Total symbols to fetch sentiment for {len(symbols)}")
 
-    # ---------- coverage check per symbol ----------
-    coverage = {}
-    if spark.catalog.tableExists(bronze_av_sentiment):
-        coverage = {
-            row["symbol"]: row["max_date"]
-            for row in spark.table(bronze_av_sentiment)
-            .groupBy("symbol")
-            .agg({"published_at": "max"})
-            .withColumnRenamed("max(published_at)", "max_date")
-            .collect()
-        }
+    # ---------- finds last date & build dict (symbol:min_date) ----------
+    coverage = {
+        row["symbol"]: row["min_date"]
+        for row in spark.table(bronze_av_sentiment)
+        .groupBy("symbol")
+        .agg({"published_at": "min"})
+        .withColumnRenamed("min(published_at)", "min_date")
+        .collect()
+    }
 
-    # ---------- sort: bootstrap symbols first ----------
-    symbols.sort(key=lambda s: 0 if s not in coverage else 1)
-
-    logger.info(
-        f"Coverage: {len(coverage)} symbols in bronze | "
-        f"Bootstrap needed: {sum(1 for s in symbols if s not in coverage)}"
-    )
+    # ---------- sort list ----------
+    symbols = [s for s in symbols if s in coverage]
 
     # ---------- extraction ----------
-    client = AlphaVantageSentimentClient(
+    client = AVSentimentHistoryClient(
         config=config,
         api_key=api_key
     )
@@ -86,14 +76,12 @@ def run():
 
     for symbol in symbols:
         try:
-            max_date = coverage.get(symbol)
-            time_from = None if max_date is None else max_date.strftime("%Y%m%dT%H%M")
-
-            logger.info(f"{'BOOTSTRAP' if max_date is None else 'REFRESH'} for {symbol}")
+            min_date = coverage[symbol]
+            time_to = min_date.strftime("%Y%m%dT%H%M")
 
             raw_json = client.fetch_sentiment(
                 ticker=symbol,
-                time_from=time_from
+                time_to=time_to
             )
 
             if raw_json.get("_rate_limited"):
@@ -104,21 +92,21 @@ def run():
 
         except Exception as e:
             logger.error(f"Extraction failed for {symbol}", exc_info=True)
-    
+
     # ---------- parsing ----------
     parsed_rows = list(AvJsonParser.parse(all_rows, set(symbols)))
 
     # ---------- create df ----------
     df = spark.createDataFrame(parsed_rows, schema=av_sentiment_bronze_schema)
 
-    # ---------- Validation ----------
+    # ---------- validation ----------
     AVValidator.validate_schema(df)
     AVValidator.validate_not_empty(df)
 
-    # ---------- Cleaning ----------
+    # ---------- cleaning ----------
     df = AVSentimentCleaner.drop_duplicates(df, ["symbol", "published_at", "title"])
 
-    # ---------- Write upsert ----------
+    # ---------- write upsert ----------
     DeltaTableWriter(
         spark=spark,
         table_name=bronze_av_sentiment
