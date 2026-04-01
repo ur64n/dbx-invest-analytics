@@ -21,7 +21,7 @@ def run():
     config = load_config()
 
     # ---------- tables ----------
-    ohlcv_table = config["tables"]["silver_ohlcv"]
+    ohlcv_table = config["tables"]["bronze_ohlcv"]
 
     # ---------- parameters ----------
     base_start_date = config["yfinance"]["start_date"]
@@ -107,7 +107,7 @@ def run():
     DeltaTableWriter(
         spark=spark,
         table_name=config["tables"]["bronze_ohlcv"]
-    ).overwrite_schema(df)
+    ).upsert(df, merge_keys=["date", "symbol"])
 
     logger.info("OHLCV pipeline successfully")
 
