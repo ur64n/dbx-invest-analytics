@@ -13,5 +13,5 @@ class GoldMacroImpactValidator:
         if df.filter(col("monthly_return").isNull()).head(1):
             raise ValueError("monthly_return contains nulls")
 
-        if df.filter(spark_abs(col("monthly_return")) > 0.5).count() > 0:
+        if df.filter(spark_abs(col("monthly_return")) > 0.5).head(1):
             logger.warning("monthly_return contains extreme values (>50%)")

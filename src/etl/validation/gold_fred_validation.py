@@ -9,10 +9,6 @@ class GoldFredValidator:
     @staticmethod
     def validate_nulls(df: DataFrame) -> None:
         logger.info("Checking for nulls in joined columns")
-        
-        total_nulls = df.filter(
-            (col("frequency").isNull()) |
-            (col("unit").isNull()))
-        
-        if total_nulls.limit(1).count() > 0:
+
+        if df.filter((col("frequency").isNull()) | (col("unit").isNull())).head(1):
             raise ValueError("Nulls found in joined columns")

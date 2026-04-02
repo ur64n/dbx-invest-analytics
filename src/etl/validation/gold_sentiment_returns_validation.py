@@ -17,5 +17,5 @@ class GoldSentimentReturnValidator:
         if df.filter((col("avg_sentiment_score") < -1) | (col("avg_sentiment_score") > 1)).head(1):
             raise ValueError("avg_sentimen_score contains out of range values")
 
-        if df.filter(spark_abs(col("daily_return")) > 0.5).count() > 0:
+        if df.filter(spark_abs(col("daily_return")) > 0.5).head(1):
             logger.warning("The values in the daily_return column exceed extreme differences")

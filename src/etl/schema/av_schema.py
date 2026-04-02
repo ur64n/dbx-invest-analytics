@@ -68,3 +68,8 @@ GOLD_REQUIRED_COLUMNS = {
     "article_count",
     "source_api",
 }
+
+GOLD_KEY_COLUMNS = {
+    "symbol",
+    "date"
+}

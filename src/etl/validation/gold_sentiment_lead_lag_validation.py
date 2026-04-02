@@ -2,7 +2,7 @@ from pyspark.sql import DataFrame
 from pyspark.sql.functions import col, abs as spark_abs
 from src.config.logger import get_logger
 
-logger = get_logger("gold_sentiment_returns_validation")
+logger = get_logger("gold_sentiment_lead_lag_validation")
 
 class GoldSentimentLeadLagValidator:
 
@@ -23,12 +23,12 @@ class GoldSentimentLeadLagValidator:
         ).head(1):
             raise ValueError("Columns with returns values contain nulls")
 
-        if df.filter(spark_abs(col("return_t1")) > 0.5).count() > 0:
+        if df.filter(spark_abs(col("return_t1")) > 0.5).head(1):
             logger.warning("return_t1 contains extreme values")
 
-        if df.filter(spark_abs(col("return_t2")) > 0.6).count() > 0:
+        if df.filter(spark_abs(col("return_t2")) > 0.6).head(1):
             logger.warning("return_t2 contains extreme values")
         
-        if df.filter(spark_abs(col("return_t5")) > 0.8).count() > 0:
+        if df.filter(spark_abs(col("return_t5")) > 0.8).head(1):
             logger.warning("return_t5 contains extreme values")
 

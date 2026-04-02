@@ -3,28 +3,11 @@ from src.config.logger import get_logger
 
 from pyspark.sql.functions import current_date, col, current_timestamp
 
-from src.etl.schema.av_schema import BRONZE_REQUIRED_COLUMNS, ALLOWED_VALUES
+from src.etl.schema.av_schema import ALLOWED_VALUES
 
-logger = get_logger("av_validation")
+logger = get_logger("av_sentiment_validation")
 
 class AVValidator:
-
-    # ---------- bronze validation ----------
-    @staticmethod
-    def validate_schema(df: DataFrame) -> None:
-        logger.info("Validating AV required columns")
-
-        missing = BRONZE_REQUIRED_COLUMNS - set(df.columns)
-
-        if missing:
-            raise ValueError(f"Missing required columns: {missing}")
-
-    @staticmethod
-    def validate_not_empty(df: DataFrame) -> None:
-        logger.info("Validating AV dataset is not empty")
-
-        if df.limit(1).count() == 0:
-            raise ValueError("AV dataset is empty")
 
     # ---------- silver validation ----------
     @staticmethod

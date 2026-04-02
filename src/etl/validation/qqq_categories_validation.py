@@ -19,7 +19,7 @@ class QQQCategoriesValidator:
     def validate_symbol_nulls(df: DataFrame) -> None:
         logger.info("Validating categories df symbol nulls")
 
-        if df.filter(col("symbol").isNull()).count() > 0:
+        if df.filter(col("symbol").isNull()).head(1):
             raise ValueError("Null symbols found in categories df")
     
     @staticmethod

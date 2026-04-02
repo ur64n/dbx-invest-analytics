@@ -2,7 +2,7 @@ from pyspark.sql import SparkSession
 from src.config.config_loader import load_config
 from src.config.logger import get_logger
 
-from src.etl.schema.av_schema import GOLD_REQUIRED_COLUMNS
+from src.etl.schema.av_schema import GOLD_REQUIRED_COLUMNS, GOLD_KEY_COLUMNS
 
 from src.etl.extraction.delta_table_extractor import DeltaTableExtractor
 from src.etl.transformations.av_sentiment_aggregation import AVSentimentAggregator
@@ -31,7 +31,7 @@ def run():
     # ---------- validation ----------
     ValidationHelper.validate_not_empty(df, context="")
     ValidationHelper.validate_schema(df, GOLD_REQUIRED_COLUMNS, context="gold sentiment aggregated df")
-    GoldAVSentimentValidator.validate_uniqueness(df)
+    ValidationHelper.validate_uniqueness(df, GOLD_KEY_COLUMNS)
     GoldAVSentimentValidator.validate_domain_rules(df)
     
     # ---------- write ----------

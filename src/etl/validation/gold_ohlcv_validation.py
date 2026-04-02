@@ -27,11 +27,9 @@ class GoldOHLCVValidator:
 
         benchmark = df.filter(col("symbol").isin("^vix", "qqq", "spy", "tlt", "gld"))
 
-        has_values = benchmark.filter(
+        if benchmark.filter(
             col("name").isNotNull() |
             col("sector").isNotNull() |
             col("industry").isNotNull()
-        ).count()
-
-        if has_values > 0:
+        ).head(1):
             raise ValueError("Benchmark symbols have unexpected dimension values")

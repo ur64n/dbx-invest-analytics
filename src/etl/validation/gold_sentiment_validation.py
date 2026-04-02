@@ -8,23 +8,11 @@ logger = get_logger("gold_sentiment_validation")
 class GoldAVSentimentValidator:
 
     @staticmethod
-    def validate_uniqueness(df: DataFrame) -> None:
-        logger.info("Starting uniqueness validation on (symbol+date) columns")
-        
-        total = df.count()
-        unique_rows = df.select("symbol","date").distinct().count()
-
-        if total != unique_rows:
-            raise ValueError("Dataset contains duplicated values")
-
-        logger.info("Complete, all rows are unique")
-
-    @staticmethod
     def validate_domain_rules(df: DataFrame) -> None:
 
         logger.info("Validating all symbols contain articles data")
 
-        if df.filter(col("article_count") <= 0).limit(1).count() > 0:
+        if df.filter(col("article_count") <= 0).head(1):
             raise ValueError("Some symbols have no articles sentiment data")
 
         logger.info("Validating avg_sentiment_score correct value range")
@@ -45,8 +33,5 @@ class GoldAVSentimentValidator:
             (col("neutral_count") < 0) |
             (col("somewhat_bearish_count") < 0) |
             (col("bearish_count") < 0)
-        ).limit(1).count() > 0:
+        ).head(1):
             raise ValueError("Some of count columns contain negative value")
-
-        
-

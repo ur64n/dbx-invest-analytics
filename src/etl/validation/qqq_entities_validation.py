@@ -9,7 +9,6 @@ logger = get_logger("qqq_entities_validation")
 class QQQEntitiesValidator:
 
     # ---------- Bronze ----------
-
     @staticmethod
     def validate_column_values(df: DataFrame) -> None:
         logger.info("Validating column values")
@@ -26,28 +25,15 @@ class QQQEntitiesValidator:
                     f"Found {empty_count} empty values in column: {c}"
                 )
 
-    @staticmethod
-    def validate_symbol_uniqueness(df: DataFrame) -> None:
-        logger.info("Validating symbol uniqueness")
-
-        total = df.count()
-        distinct = df.select("Symbol").distinct().count()
-
-        if total != distinct:
-            raise ValueError(
-                f"Found {total - distinct} duplicate Symbol values"
-            )
-
     # ---------- Silver ----------
-
     @staticmethod
     def validate_holding_range(df: DataFrame) -> None:
         logger.info("Validating holding range")
 
-        if df.filter((col("percent_holding") < 0) | (col("percent_holding") > 100)).count() > 0:
+        if df.filter((col("percent_holding") < 0) | (col("percent_holding") > 100)).head(1):
             raise ValueError("Found values outside of range 0-100 in precent_holding column")
 
-        if df.filter(col("percent_holding") == 0).count() > 0:
+        if df.filter(col("percent_holding") == 0).head(1):
             raise ValueError("Found 0 values in precent_holding column")
 
     @staticmethod
@@ -60,48 +46,3 @@ class QQQEntitiesValidator:
             logger.warning(
                 f"Found {null_count} null values in precent_holding column"
             )
-
-    # ---------- ENRICHMENT VALIDATION ----------
-    #TODO: Currently not used methods. Move enrichment validations to silver_to_gold pipeline
-
-    @staticmethod
-    def validate_enrichment_inputs(
-        base_df: DataFrame, category_df: DataFrame
-    ) -> None:
-        logger.info("Validating enrichment inputs")
-
-        base_required = {"symbol"}
-        category_required = {"symbol", "sector", "industry"}
-
-        missing_base = base_required - set(base_df.columns)
-        missing_category = category_required - set(category_df.columns)
-
-        if missing_base:
-            raise ValueError(
-                f"Missing columns in base dataframe: {missing_base}"
-            )
-
-        if missing_category:
-            raise ValueError(
-                f"Missing columns in category dataframe: {missing_category}"
-            )
-
-    @staticmethod
-    def validate_missing_categories(
-        total_symbols: int, category_df: DataFrame
-    ) -> None:
-        logger.warning("Validating missing enrichment categories")
-
-        missing_sector = category_df.filter(
-            category_df.sector.isNull()
-        ).count()
-
-        missing_industry = category_df.filter(
-            category_df.industry.isNull()
-        ).count()
-
-        if missing_sector > 0 or missing_industry > 0:
-            logger.warning(
-                f"Missing sector={missing_sector}, industry={missing_industry}"
-            )
-
