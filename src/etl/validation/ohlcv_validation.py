@@ -4,37 +4,11 @@ from src.config.logger import get_logger
 
 from pyspark.sql.functions import current_date
 
-from src.etl.schema.ohlcv_schema import REQUIRED_COLUMNS, NOT_NULL_COLUMNS, UNIQUE_KEY, PRICE_COLUMNS
+from src.etl.schema.ohlcv_schema import NOT_NULL_COLUMNS, PRICE_COLUMNS
 
 logger = get_logger("ohlcv_validation")
 
 class OHLCVValidator:
-
-    @staticmethod
-    def validate_schema(df: DataFrame) -> None:
-        logger.info("Validating ohlcv required columns")
-
-        missing_columns = REQUIRED_COLUMNS - set(df.columns)
-
-        if missing_columns:
-            raise ValueError(f"Missing required columns: {missing_columns}")
-
-    @staticmethod
-    def validate_not_empty(df: DataFrame) -> None:
-        logger.info("Validating ohlcv dataset is not empty")
-
-        if df.limit(1).count() == 0:
-            raise ValueError("Ohlcv dataset is empty")
-
-    @staticmethod
-    def validate_unique_key(df: DataFrame) -> None:
-        logger.info(f"Validating ohlcv unique key {UNIQUE_KEY}")
-
-        total_rows = df.count()
-        unique_rows = df.select(UNIQUE_KEY).distinct().count()
-
-        if total_rows != unique_rows:
-            raise ValueError(f"Duplicate values found in unique key")
 
     @staticmethod
     def validate_records_number_per_symbol(df: DataFrame) -> None:

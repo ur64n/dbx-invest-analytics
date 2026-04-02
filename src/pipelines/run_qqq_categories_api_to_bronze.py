@@ -2,8 +2,11 @@ from pyspark.sql import SparkSession
 from src.config.logger import get_logger
 from src.config.config_loader import load_config
 
+from src.etl.schema.qqq_categories_schema import REQUIRED_COLUMNS
+
 from src.etl.extraction.delta_table_extractor import DeltaTableExtractor
 from src.etl.extraction.qqq_categories_extraction import QQQCategoriesExtractor
+from src.etl.utils.validation_helper import ValidationHelper
 from src.etl.validation.qqq_categories_validation import QQQCategoriesValidator
 from src.etl.write.delta_table_writer import DeltaTableWriter
 
@@ -22,18 +25,16 @@ def run():
         table_name=config["tables"]["bronze_qqq"]
     ).read()
 
-    # ---------- extraction ----------
+    # ---------- collect symbols ----------
     symbols = [r.symbol for r in df.select("symbol").distinct().collect()]
-
+    
+    # ---------- extraction ----------
     df = QQQCategoriesExtractor(spark).extract(symbols)
 
     # ---------- validation ----------
+    ValidationHelper.validate_schema(df, REQUIRED_COLUMNS, context="qqq_etf_categories")
+    ValidationHelper.validate_not_empty(df, context="qqq_etf_categories")
     QQQCategoriesValidator.validate_symbols_consistency(symbols, df)
-    QQQCategoriesValidator.validate_not_empty(df)
-    QQQCategoriesValidator.validate_schema(df)
-    QQQCategoriesValidator.validate_symbol_uniqueness(df)
-    QQQCategoriesValidator.validate_symbol_nulls(df)
-    QQQCategoriesValidator.validate_attribute_nulls(df)
 
     # ---------- write data ----------
     DeltaTableWriter(

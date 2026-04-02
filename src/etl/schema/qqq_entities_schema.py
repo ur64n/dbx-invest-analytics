@@ -1,25 +1,25 @@
 from pyspark.sql.types import StructType, StructField, StringType, DoubleType
 
-qqq_schema = StructType([
+QQQ_SCHEMA = StructType([
     StructField("Symbol", StringType(), True),
     StructField("Name", StringType(), True),
     StructField("% Holding", StringType(), True),
     StructField("Shares", StringType(), True)
 ])
 
-required_raw_columns = {
+REQUIRED_RAW_COLUMNS = {
     "Symbol",
     "Name",
     "% Holding"
 }
 
-required_silver_columns = {
+REQUIRED_SILVER_COLUMNS = {
     "symbol",
     "name",
     "percent_holding"
 }
 
-not_null_columns = [
+NOT_NULL_COLUMNS = [
     "symbol",
     "name",
     "percent_holding"

@@ -2,15 +2,11 @@
 - AV Sentiment scheduled pipeline wywala się od 2 dni z błędem limitu API.
 - Sprawdzić czy bronze.qqq_etf_constituents jest gdziekolwiek używana - jeśli nie, martwa tabela.
 
----
-- Zweryfikowac nazewnictwo tabel i zaktualizowac plik config dev.yaml 
-- tabela consistuens jest chyba nie uzywana sprawdzic i dropnac 
 - Zmienić metody walidacji emptiness, rows_after_join uniqueness i schema w kazdym pipeline na te z utils i usunąć te niepotrzebne.
 - Zaktualizować readme
-- Napisać testy jednostkowe | done
+- Napisać testy jednostkowe dla nowego pajpa i ekstrakcji jesli potrzebne sentiment history
 - Zmienić w walidacjach .count() na head(), lub count z limitem.
 - Sprawdzić we wszystkich plikach #TODO:
-- Utworzyć notatniki z EDA dla wszystkich tabel delta w schematach bronze/silver/gold (dołożyć ewentualne walidacje na podstawie wyników wskazujących na anomalie) | in progress
 - Stworzyc kod dla retencji danych dla kazdego datasetu
 ---
 

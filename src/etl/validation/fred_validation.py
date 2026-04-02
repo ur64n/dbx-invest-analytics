@@ -3,29 +3,11 @@ from pyspark.sql.functions import col
 from src.config.logger import get_logger
 from pyspark.sql.functions import current_date
 
-from src.etl.schema.fred_schema import REQUIRED_COLUMNS
-
 logger = get_logger("fred_validation")
 
 #TODO: Zmienić z .count() na .head(1)
 
 class FredValidator:
-
-    @staticmethod
-    def validate_schema(df: DataFrame) -> None:
-        logger.info(f"Validating FRED required columns")
-
-        missing = REQUIRED_COLUMNS - set(df.columns)
-
-        if missing:
-            raise ValueError(f"Missing required columns: {missing}")
-
-    @staticmethod
-    def validate_not_empty(df: DataFrame) -> None:
-        logger.info("Validating FRED dataset not empty")
-
-        if df.limit(1).count() == 0:
-            raise ValueError("FRED dataset is empty")
 
     @staticmethod
     def validate_domain_rules(df: DataFrame) -> None:
@@ -43,15 +25,3 @@ class FredValidator:
         negatives = df.filter(col("value") < 0).count()
         if negatives > 0:
             raise ValueError(f"Found {negatives} negative indicator values")
-
-    @staticmethod
-    def validate_uniqueness(df: DataFrame) -> None:
-        logger.info("Validating uniqueness (indicator_id, date)")
-
-        total = df.count()
-        distinct = df.select("indicator_id", "date").distinct().count()
-
-        if total != distinct:
-            raise ValueError(
-                f"Duplicate (indicator_id, date): {total - distinct}"
-            )

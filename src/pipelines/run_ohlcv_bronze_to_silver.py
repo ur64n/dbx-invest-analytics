@@ -3,8 +3,11 @@ from pyspark.sql import SparkSession
 from src.config.config_loader import load_config
 from src.config.logger import get_logger
 
+from src.etl.schema.ohlcv_schema import KEY_COLUMNS
+
 from src.etl.extraction.delta_table_extractor import DeltaTableExtractor
 from src.etl.transformations.ohlcv_transformation import OHLCVTransformer
+from src.etl.utils.validation_helper import ValidationHelper
 from src.etl.validation.ohlcv_validation import OHLCVValidator
 from src.etl.write.delta_table_writer import DeltaTableWriter
 
@@ -28,9 +31,7 @@ def run():
     df = OHLCVTransformer.normalize_symbol(df)
 
     # ---------- validation ----------
-    OHLCVValidator.validate_schema(df)
-    OHLCVValidator.validate_not_empty(df)
-    OHLCVValidator.validate_unique_key(df)
+    ValidationHelper.validate_uniqueness(df, KEY_COLUMNS)
     OHLCVValidator.validate_records_number_per_symbol(df)
     OHLCVValidator.validate_null_values(df)
     OHLCVValidator.validate_empty_values(df)

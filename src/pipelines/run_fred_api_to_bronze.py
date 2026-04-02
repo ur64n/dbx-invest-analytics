@@ -8,11 +8,12 @@ from pyspark.dbutils import DBUtils
 from src.config.logger import get_logger
 from src.config.config_loader import load_config
 
-from src.etl.schema.fred_schema import fred_schema
+from src.etl.schema.fred_schema import fred_schema, REQUIRED_COLUMNS
 from src.etl.schema.fred_metadata_schema import fred_metadata_schema
 from src.etl.extraction.fred.fred_client import FredClient
 from src.etl.extraction.fred.fred_run_metadata import FredRunMetadataWriter
 from src.etl.transformations.fred_xml_parser import FredXMLParser
+from src.etl.utils.validation_helper import ValidationHelper
 from src.etl.validation.fred_validation import FredValidator
 from src.etl.validation.fred_metadata_validation import FredMetadataValidator
 from src.etl.write.delta_table_writer import DeltaTableWriter
@@ -152,11 +153,26 @@ def run():
         ) # metadata unit frequency df 
     
     # ---------- validation ---------- 
-    FredValidator.validate_schema(fact_df)
-    FredValidator.validate_not_empty(fact_df)
+    ValidationHelper.validate_schema(
+        fact_df, 
+        REQUIRED_COLUMNS, 
+        context="fred_macro_indicators"
+        )
+    
+    ValidationHelper.validate_not_empty(
+        fact_df, 
+        context="fred_macro_indicators"
+        )
 
-    FredMetadataValidator.validate_metadata_schema(dim_df)
-    FredMetadataValidator.validate_metadata_not_empty(dim_df)
+    ValidationHelper.validate_schema(
+        dim_df,
+        REQUIRED_COLUMNS,
+        context="fred_macro_metadata_indicators")
+    
+    ValidationHelper.validate_not_empty(
+        dim_df,
+        context="fred_macro_metadata_indicators"
+        )
     
     # ---------- write ---------- 
     DeltaTableWriter(

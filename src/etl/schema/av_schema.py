@@ -29,6 +29,8 @@ BRONZE_REQUIRED_COLUMNS = {
     "ticker_sentiment_label",
 }
 
+# ---------- silver ----------
+
 ALLOWED_VALUES = {
     "bullish",
     "somewhat-bullish",
@@ -37,7 +39,13 @@ ALLOWED_VALUES = {
     "bearish"
 }
 
-# ---------- silver (daily aggregation per ticker) ----------
+KEY_COLUMNS = {
+    "symbol", 
+    "published_at", 
+    "title"
+}
+
+# ---------- gold (daily aggregation per ticker) ----------
 
 av_sentiment_gold_schema = StructType([
     StructField("symbol", StringType(), False),

@@ -4,9 +4,12 @@ from pyspark.sql.functions import max as spark_max
 from src.config.config_loader import load_config
 from src.config.logger import get_logger
 
+from src.etl.schema.ohlcv_schema import REQUIRED_COLUMNS
+
 from src.etl.extraction.delta_table_extractor import DeltaTableExtractor
-from src.etl.extraction.yahoo_finance.yahoo_ohlcv_extractor import download_ohlcv
 from src.etl.cleaning.ohlcv_cleaning import OHLCVCleaner
+from src.etl.extraction.yahoo_finance.yahoo_ohlcv_extractor import download_ohlcv
+from src.etl.utils.validation_helper import ValidatioHelper
 from src.etl.write.delta_table_writer import DeltaTableWriter
 
 from datetime import datetime, timedelta, UTC
@@ -102,6 +105,18 @@ def run():
 
     # ---------- convert ----------
     df = spark.createDataFrame(pdf)
+
+    # ---------- validation ----------
+    ValidatioHelper.validate_schema(
+        df, 
+        REQUIRED_COLUMNS, 
+        context="ohlcv_indicators"
+        )
+    
+    ValidatioHelper.validate_not_empty(
+        df, 
+        context="ohlcv_indicators"
+        )
 
     # ---------- write ----------
     DeltaTableWriter(

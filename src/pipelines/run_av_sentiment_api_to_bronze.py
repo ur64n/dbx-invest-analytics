@@ -9,13 +9,13 @@ from pyspark.sql.functions import col
 from src.config.logger import get_logger
 from src.config.config_loader import load_config
 
-from src.etl.schema.av_schema import av_sentiment_bronze_schema
+from src.etl.schema.av_schema import av_sentiment_bronze_schema, BRONZE_REQUIRED_COLUMNS
 
 from src.etl.extraction.delta_table_extractor import DeltaTableExtractor
 from src.etl.extraction.alpha_vantage.av_sentiment_client import AlphaVantageSentimentClient
 from src.etl.transformations.av_json_parser import AvJsonParser
 from src.etl.cleaning.av_sentiment_cleaning import AVSentimentCleaner
-from src.etl.validation.av_sentiment_validation import AVValidator
+from src.etl.utils.validation_helper import ValidationHelper
 from src.etl.write.delta_table_writer import DeltaTableWriter
 
 logger = get_logger("av_sentiment_api_to_bronze")
@@ -112,8 +112,15 @@ def run():
     df = spark.createDataFrame(parsed_rows, schema=av_sentiment_bronze_schema)
 
     # ---------- Validation ----------
-    AVValidator.validate_schema(df)
-    AVValidator.validate_not_empty(df)
+    ValidationHelper.validate_schema(
+        df,
+        required_columns=BRONZE_REQUIRED_COLUMNS,
+        context="bronze_av_sentiment")
+    
+    ValidationHelper.validate_not_empty(
+        df,
+        context="bronze_av_sentiment"
+        )
 
     # ---------- Cleaning ----------
     df = AVSentimentCleaner.drop_duplicates(df, ["symbol", "published_at", "title"])

@@ -33,16 +33,6 @@ class AVValidator:
 
         if df.filter(col("symbol").isNull()).head(1):
             raise ValueError("symbol column contains nulls")
-
-    @staticmethod
-    def validate_uniqueness(df: DataFrame) -> None:
-        logger.info("Validating uniqueness (symbol, published_at, title)")
-
-        total = df.count()
-        distinct = df.select("symbol", "published_at", "title").distinct().count()
-
-        if total != distinct:
-            raise ValueError(f"Duplicates in dataset on key columns: {total - distinct}")
     
     @staticmethod
     def validate_date_not_future(df: DataFrame) -> None:

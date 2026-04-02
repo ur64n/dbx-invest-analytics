@@ -4,27 +4,9 @@ from src.config.logger import get_logger
 
 from src.etl.schema.qqq_entities_schema import not_null_columns
 
-logger = get_logger("validation")
+logger = get_logger("qqq_entities_validation")
 
 class QQQEntitiesValidator:
-
-    # ---------- Reusable ---------- 
-
-    @staticmethod
-    def validate_schema(df: DataFrame, req_cols: {set}) -> None:
-        logger.info("Validating required columns in dataset")
-
-        missing = req_cols - set(df.columns)
-
-        if missing:
-            raise ValueError(f"Missing required column in dataset: {missing}")
-
-    @staticmethod
-    def validate_not_empty(df: DataFrame) -> None:
-        logger.info("Validating raw CSV not empty")
-
-        if df.count() == 0:
-            raise ValueError("Raw CSV DataFrame is empty")
 
     # ---------- Bronze ----------
 
@@ -56,7 +38,7 @@ class QQQEntitiesValidator:
                 f"Found {total - distinct} duplicate Symbol values"
             )
 
-    # ---------- SILVER VALIDATION ----------
+    # ---------- Silver ----------
 
     @staticmethod
     def validate_holding_range(df: DataFrame) -> None:

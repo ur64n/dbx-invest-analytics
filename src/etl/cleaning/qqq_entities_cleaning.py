@@ -1,9 +1,8 @@
 from pyspark.sql import DataFrame
 from pyspark.sql.functions import col, lower, trim, regexp_replace
 from src.config.logger import get_logger
-from src.etl.validation.qqq_entities_validation import QQQEntitiesValidator
 
-logger = get_logger("cleaning")
+logger = get_logger("qqq_entities_cleaning")
 
 class QQQEntitiesCleaner:
 
@@ -11,24 +10,13 @@ class QQQEntitiesCleaner:
     def remove_invalid_rows(df: DataFrame) -> DataFrame:
         logger.info("Start cleaning rows in qqq_entities")
 
-        return df.filter(col("Symbol").isNotNull() & ~col("Symbol").rlike("(?i)^(qqq|downloaded)"))
-
-    @staticmethod
-    def clean_columns(df: DataFrame) -> DataFrame:
-        logger.info("Standardizing column names and types")
-
-        df = df.toDF(*[c.strip().lower() for c in df.columns]) # list comp zbiera liste nazw kolumn z dataframe zmniejsza i usuwa biale znaki, a .toDF ustawia nowe nazwy w nowym dataframe
-
-        df = df.withColumn(
-            "percent_holding",
-            regexp_replace(col("percent_holding"), "%", "")
-            .cast("decimal(5,2)")
+        return df.filter(
+            col("Symbol").isNotNull() 
+            & ~col("Symbol").rlike("(?i)^(qqq|downloaded)")
         )
 
-        return df
-
     @staticmethod
-    def clean_rows(df: DataFrame, text_cols: [str]) -> DataFrame:
+    def clean_rows(df: DataFrame, text_cols: list[str]) -> DataFrame:
         logger.info("Standardizing row values")
 
         for c in text_cols:

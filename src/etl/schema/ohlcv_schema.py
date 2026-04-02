@@ -19,7 +19,7 @@ NOT_NULL_COLUMNS = {
     "close",
 }
 
-UNIQUE_KEY = [
+KEY_COLUMNS = [
     "date",
     "symbol"
 ]

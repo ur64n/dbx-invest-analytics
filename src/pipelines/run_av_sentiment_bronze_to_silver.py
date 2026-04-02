@@ -2,8 +2,11 @@ from pyspark.sql import SparkSession
 from src.config.logger import get_logger
 from src.config.config_loader import load_config
 
+from src.etl.schema.av_schema import KEY_COLUMNS
+
 from src.etl.extraction.delta_table_extractor import DeltaTableExtractor
 from src.etl.cleaning.av_sentiment_cleaning import AVSentimentCleaner
+from src.etl.utils.validation_helper import ValidationHelper
 from src.etl.validation.av_sentiment_validation import AVValidator
 from src.etl.write.delta_table_writer import DeltaTableWriter
 
@@ -28,7 +31,7 @@ def run():
 
     # ---------- validation ----------
     AVValidator.validate_symbol_not_null(df)
-    AVValidator.validate_uniqueness(df)
+    ValidationHelper.validate_uniqueness(df, KEY_COLUMNS)
     AVValidator.validate_date_not_future(df)
     AVValidator.validate_negative_values(df)
     AVValidator.validate_score_label_consistency(df)

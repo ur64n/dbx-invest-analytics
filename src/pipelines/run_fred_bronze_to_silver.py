@@ -2,9 +2,13 @@ from pyspark.sql import SparkSession
 from src.config.config_loader import load_config
 from src.config.logger import get_logger
 
+from src.etl.schema.fred_schema import KEY_COLUMNS
+from src.etl.schema.fred_metadata_schema import KEY_METADATA_COLUMNS
+
 from src.etl.extraction.delta_table_extractor import DeltaTableExtractor
 from src.etl.cleaning.fred_cleaning import FredCleaner
 from src.etl.cleaning.fred_metadata_cleaning import FredMetadataCleaner
+from src.etl.utils.validation_helper import ValidationHelper
 from src.etl.validation.fred_validation import FredValidator
 from src.etl.validation.fred_metadata_validation import FredMetadataValidator
 from src.etl.write.delta_table_writer import DeltaTableWriter
@@ -35,9 +39,9 @@ def run():
 
     # ---------- domain validation ----------
     FredValidator.validate_domain_rules(fact_df)
-    FredValidator.validate_uniqueness(fact_df)
+    ValidationHelper.validate_uniqueness(fact_df, KEY_COLUMNS)
     
-    FredMetadataValidator.validate_metadata_key_uniqueness(dim_df)
+    ValidationHelper.validate_uniqueness(dim_df, KEY_METADATA_COLUMNS)
     FredMetadataValidator.validate_canonical_frequency(dim_df)
 
     # ---------- write ----------

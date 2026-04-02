@@ -1,8 +1,8 @@
 from pyspark.sql import DataFrame
+from pyspark.sql.functions import col, regexp_replace
 from src.config.logger import get_logger
-from pyspark.sql.functions import lower, col
 
-logger = get_logger("transformation")
+logger = get_logger("qqq_entities_transformation")
 
 class QQQEntitiesTransformer:
 
@@ -18,6 +18,10 @@ class QQQEntitiesTransformer:
             .drop("Shares")
         )
 
-        df = df.withColumn("symbol", lower(col("symbol")))
-        
+        df = df.withColumn(
+            "percent_holding",
+            regexp_replace(col("percent_holding"), "%", "")
+            .cast("decimal(5,2)")
+        )
+
         return df

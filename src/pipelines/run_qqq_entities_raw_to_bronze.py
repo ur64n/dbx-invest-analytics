@@ -2,12 +2,11 @@ from pyspark.sql import SparkSession
 from src.config.logger import get_logger
 from src.config.config_loader import load_config
 
-from src.etl.schema.qqq_entities_schema import qqq_schema, required_raw_columns
+from src.etl.schema.qqq_entities_schema import QQQ_SCHEMA, REQUIRED_RAW_COLUMNS
 
 from src.etl.extraction.qqq_entities_extraction import QQQEntitiesExtractor
 from src.etl.cleaning.qqq_entities_cleaning import QQQEntitiesCleaner
-from src.etl.validation.qqq_entities_validation import QQQEntitiesValidator
-from src.etl.transformations.qqq_entities_transformation import QQQEntitiesTransformer
+from src.etl.utils.validation_helper import ValidationHelper
 from src.etl.write.delta_table_writer import DeltaTableWriter
 
 logger = get_logger("qqq_entities_raw_to_bronze_pipeline")
@@ -24,31 +23,32 @@ def run(env: str = "dev"):
         spark=spark,
         raw_path=cfg["paths"]["raw_csv"],
         expected_filename=cfg["files"]["qqq_entities"],
-        schema=qqq_schema,
+        schema=QQQ_SCHEMA,
     )
 
     # ---------- read data ----------
-    raw_df = extractor.read()
+    df = extractor.read()
 
     # ---------- cleaning ----------
-    cleaned_df = QQQEntitiesCleaner.remove_invalid_rows(raw_df)
+    df = QQQEntitiesCleaner.remove_invalid_rows(df)
 
     # ---------- validation ----------
-    QQQEntitiesValidator.validate_schema(cleaned_df, required_raw_columns)
-    QQQEntitiesValidator.validate_not_empty(cleaned_df)
-
-    # ---------- transform ----------
-    bronze_df = QQQEntitiesTransformer.transform_raw(cleaned_df)
-
-    # ---------- validation ----------
-    QQQEntitiesValidator.validate_column_values(bronze_df)
-    QQQEntitiesValidator.validate_symbol_uniqueness(bronze_df)
+    ValidationHelper.validate_schema(
+        df, 
+        REQUIRED_RAW_COLUMNS, 
+        context="qqq_etf_constituents"
+    )
+    
+    ValidationHelper.validate_not_empty(
+        df,
+        context="qqq_etf_constituents"
+    )
 
     # ---------- write BRONZE ----------
     DeltaTableWriter(
         table_name=cfg["tables"]["bronze_qqq"],
         spark=spark
-    ).overwrite(bronze_df)
+    ).overwrite(df)
 
     logger.info("qqq_entities_raw_to_bronze_pipeline completed successfully")
 

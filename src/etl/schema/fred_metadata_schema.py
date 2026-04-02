@@ -11,3 +11,7 @@ REQUIRED_COLUMNS = {
     "unit",
     "frequency",
 }
+
+KEY_METADATA_COLUMNS = {
+    "indicator_id"
+}

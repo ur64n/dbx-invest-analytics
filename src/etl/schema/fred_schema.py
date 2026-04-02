@@ -11,3 +11,8 @@ REQUIRED_COLUMNS = {
     "date",
     "value",
 }
+
+KEY_COLUMNS = {
+    "indicator_id",
+    "date"
+}
