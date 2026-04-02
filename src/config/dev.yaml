@@ -66,5 +66,3 @@ alpha_vantage:
   time_from: "20150101T0000"
   topics:
     - technology
-    - economy
-    - finance

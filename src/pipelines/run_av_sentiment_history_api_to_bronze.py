@@ -10,6 +10,7 @@ from src.etl.utils.validation_helper import ValidationHelper
 from src.etl.write.delta_table_writer import DeltaTableWriter
 
 from pyspark.sql.functions import col
+from datetime import datetime
 from pyspark.dbutils import DBUtils
 
 from src.etl.extraction.delta_table_extractor import DeltaTableExtractor
@@ -64,7 +65,8 @@ def run():
     }
 
     # ---------- sort list ----------
-    symbols = [s for s in symbols if s in coverage]
+    cutoff = datetime(2015, 6, 1)
+    symbols = [s for s in symbols if s in coverage and coverage[s] > cutoff]
 
     # ---------- extraction ----------
     client = AVSentimentHistoryClient(

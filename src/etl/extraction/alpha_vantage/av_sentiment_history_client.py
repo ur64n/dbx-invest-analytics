@@ -49,6 +49,7 @@ class AVSentimentHistoryClient:
     def fetch_sentiment(self, ticker: str, time_to: Optional[str]) -> dict:
 
         url = self._build_url(ticker, time_to)
+    
 
         logger.info(f"Fetching sentiment data for {ticker}")
 
