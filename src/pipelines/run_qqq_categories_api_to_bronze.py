@@ -2,7 +2,7 @@ from pyspark.sql import SparkSession
 from src.config.logger import get_logger
 from src.config.config_loader import load_config
 
-from src.etl.schema.qqq_categories_schema import REQUIRED_COLUMNS
+from src.etl.schema.qqq_categories_schema import REQUIRED_COLUMNS, QQQ_CATEGORIES_SCHEMA
 
 from src.etl.extraction.delta_table_extractor import DeltaTableExtractor
 from src.etl.extraction.qqq_categories_extraction import QQQCategoriesExtractor
@@ -29,7 +29,7 @@ def run():
     symbols = [r.symbol for r in df.select("symbol").distinct().collect()]
     
     # ---------- extraction ----------
-    df = QQQCategoriesExtractor(spark).extract(symbols)
+    df = QQQCategoriesExtractor(spark).extract(symbols, QQQ_CATEGORIES_SCHEMA)
 
     # ---------- validation ----------
     ValidationHelper.validate_schema(df, REQUIRED_COLUMNS, context="qqq_etf_categories")
