@@ -1,6 +1,7 @@
 from datetime import datetime, timedelta
 from zoneinfo import ZoneInfo
 from typing import Optional
+import json
 
 from pyspark.sql import SparkSession
 from pyspark.dbutils import DBUtils
@@ -11,6 +12,7 @@ from src.config.config_loader import load_config
 
 from src.etl.schema.av_schema import av_sentiment_bronze_schema, BRONZE_REQUIRED_COLUMNS
 
+from src.etl.monitoring.pipeline_run_logger import PplLogger
 from src.etl.extraction.delta_table_extractor import DeltaTableExtractor
 from src.etl.extraction.alpha_vantage.av_sentiment_client import AlphaVantageSentimentClient
 from src.etl.transformations.av_json_parser import AvJsonParser
@@ -26,6 +28,19 @@ def run():
     # ---------- setup ----------
     spark = SparkSession.builder.getOrCreate()
     config = load_config()
+    ppl_name = "av_sentiment_api_to_bronze"
+    layer = "bronze"
+    source_table = None
+    target_table = config["tables"]["bronze_av_sentiment"]
+
+    # -------- monitoring --------
+    ppl_logger = PplLogger(spark)
+    ppl_logger.start(
+        ppl_name, 
+        layer, 
+        source_table, 
+        target_table
+    )
 
     # ---------- secrets ----------
     dbutils = DBUtils(spark)
@@ -76,6 +91,12 @@ def run():
         f"Bootstrap needed: {sum(1 for s in symbols if s not in coverage)}"
     )
 
+    # -------- monitoring --------
+    config_params = json.dumps({
+        "symbol_count": len(symbols),
+        "bootstrap_needed": sum(1 for s in symbols if s not in coverage),
+    })
+
     # ---------- extraction ----------
     client = AlphaVantageSentimentClient(
         config=config,
@@ -125,11 +146,34 @@ def run():
     # ---------- Cleaning ----------
     df = AVSentimentCleaner.drop_duplicates(df, ["symbol", "published_at", "title"])
 
+    input_rows = df.count()
+
     # ---------- Write upsert ----------
     DeltaTableWriter(
         spark=spark,
         table_name=bronze_av_sentiment
     ).upsert(df, merge_keys=["symbol", "published_at", "title"])
+
+    # -------- monitoring --------
+    output_rows = df.count()
+    rows_rejected = input_rows - output_rows
+
+    ppl_logger = PplLogger(spark)
+
+    try:
+        ppl_logger.start(
+            ppl_name, 
+            layer, 
+            source_table, 
+            target_table
+        )
+    
+    ppl_logger.finish(
+        input_rows,
+        output_rows,
+        rows_rejected,
+        config_params
+    )
 
     logger.info("Aplha Vantage sentiment pipeline API to bronze finished successfully")
 
