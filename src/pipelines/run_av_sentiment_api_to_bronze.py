@@ -23,7 +23,6 @@ from src.etl.write.delta_table_writer import DeltaTableWriter
 logger = get_logger("av_sentiment_api_to_bronze")
 
 def run():
-    logger.info("Starting Aplha Vantage sentiment pipeline API to bronze")
 
     # ---------- setup ----------
     spark = SparkSession.builder.getOrCreate()
@@ -41,141 +40,133 @@ def run():
         source_table, 
         target_table
     )
+    try:
+        # ---------- secrets ----------
+        dbutils = DBUtils(spark)
+        api_key = dbutils.secrets.get("my-scope","API_KEY_AV")
 
-    # ---------- secrets ----------
-    dbutils = DBUtils(spark)
-    api_key = dbutils.secrets.get("my-scope","API_KEY_AV")
+        # ---------- tables ----------
+        bronze_av_sentiment = config["tables"]["bronze_av_sentiment"]
 
-    # ---------- tables ----------
-    bronze_av_sentiment = config["tables"]["bronze_av_sentiment"]
+        # ---------- load symbols ----------
+        entities_df = DeltaTableExtractor(
+            spark=spark,
+            table_name=config["tables"]["gold_ohlcv_with_dimension"]
+        ).read()
 
-    # ---------- load symbols ----------
-    entities_df = DeltaTableExtractor(
-        spark=spark,
-        table_name=config["tables"]["gold_ohlcv_with_dimension"]
-    ).read()
-
-    # ---------- collect symbols ----------
-    symbols = [
-        row["symbol"].upper()
-        for row in (
-            entities_df
-            .filter(col("sector") == "technology")
-            .orderBy(col("percent_holding").desc())
-            .select("symbol")
-            .distinct()
-            .limit(50)
-            .collect()
-        )
+        # ---------- collect symbols ----------
+        symbols = [
+            row["symbol"].upper()
+            for row in (
+                entities_df
+                .filter(col("sector") == "technology")
+                .orderBy(col("percent_holding").desc())
+                .select("symbol")
+                .distinct()
+                .limit(50)
+                .collect()
+            )
     ]
 
-    logger.info(f"Total symbols to fetch sentiment for {len(symbols)}")
+        logger.info(f"Total symbols to fetch sentiment for {len(symbols)}")
 
-    # ---------- coverage check per symbol ----------
-    coverage = {}
-    if spark.catalog.tableExists(bronze_av_sentiment):
-        coverage = {
-            row["symbol"]: row["max_date"]
-            for row in spark.table(bronze_av_sentiment)
-            .groupBy("symbol")
-            .agg({"published_at": "max"})
-            .withColumnRenamed("max(published_at)", "max_date")
-            .collect()
-        }
+        # ---------- coverage check per symbol ----------
+        coverage = {}
+        if spark.catalog.tableExists(bronze_av_sentiment):
+            coverage = {
+                row["symbol"]: row["max_date"]
+                for row in spark.table(bronze_av_sentiment)
+                .groupBy("symbol")
+                .agg({"published_at": "max"})
+                .withColumnRenamed("max(published_at)", "max_date")
+                .collect()
+            }
 
-    # ---------- sort: bootstrap symbols first ----------
-    symbols.sort(key=lambda s: 0 if s not in coverage else 1)
+        # ---------- sort: bootstrap symbols first ----------
+        symbols.sort(key=lambda s: 0 if s not in coverage else 1)
 
-    logger.info(
-        f"Coverage: {len(coverage)} symbols in bronze | "
-        f"Bootstrap needed: {sum(1 for s in symbols if s not in coverage)}"
-    )
-
-    # -------- monitoring --------
-    config_params = json.dumps({
-        "symbol_count": len(symbols),
-        "bootstrap_needed": sum(1 for s in symbols if s not in coverage),
-    })
-
-    # ---------- extraction ----------
-    client = AlphaVantageSentimentClient(
-        config=config,
-        api_key=api_key
-    )
-
-    all_rows: list[dict] = []
-
-    for symbol in symbols:
-        try:
-            max_date = coverage.get(symbol)
-            time_from = None if max_date is None else max_date.strftime("%Y%m%dT%H%M")
-
-            logger.info(f"{'BOOTSTRAP' if max_date is None else 'REFRESH'} for {symbol}")
-
-            raw_json = client.fetch_sentiment(
-                ticker=symbol,
-                time_from=time_from
-            )
-
-            if raw_json.get("_rate_limited"):
-                logger.warning(f"Rate limit hit at {symbol} — stopping extraction")
-                break
-
-            all_rows.extend(raw_json.get("feed", []))
-
-        except Exception as e:
-            logger.error(f"Extraction failed for {symbol}", exc_info=True)
-    
-    # ---------- parsing ----------
-    parsed_rows = list(AvJsonParser.parse(all_rows, set(symbols)))
-
-    # ---------- create df ----------
-    df = spark.createDataFrame(parsed_rows, schema=av_sentiment_bronze_schema)
-
-    # ---------- Validation ----------
-    ValidationHelper.validate_schema(
-        df,
-        required_columns=BRONZE_REQUIRED_COLUMNS,
-        context="bronze_av_sentiment")
-    
-    ValidationHelper.validate_not_empty(
-        df,
-        context="bronze_av_sentiment"
+        logger.info(
+            f"Coverage: {len(coverage)} symbols in bronze | "
+            f"Bootstrap needed: {sum(1 for s in symbols if s not in coverage)}"
         )
 
-    # ---------- Cleaning ----------
-    df = AVSentimentCleaner.drop_duplicates(df, ["symbol", "published_at", "title"])
+        # -------- monitoring --------
+        config_params = json.dumps({
+            "symbol_count": len(symbols),
+            "bootstrap_needed": sum(1 for s in symbols if s not in coverage),
+        })
 
-    input_rows = df.count()
-
-    # ---------- Write upsert ----------
-    DeltaTableWriter(
-        spark=spark,
-        table_name=bronze_av_sentiment
-    ).upsert(df, merge_keys=["symbol", "published_at", "title"])
-
-    # -------- monitoring --------
-    output_rows = df.count()
-    rows_rejected = input_rows - output_rows
-
-    ppl_logger = PplLogger(spark)
-
-    try:
-        ppl_logger.start(
-            ppl_name, 
-            layer, 
-            source_table, 
-            target_table
+        # ---------- extraction ----------
+        client = AlphaVantageSentimentClient(
+            config=config,
+            api_key=api_key
         )
-    
-    ppl_logger.finish(
-        input_rows,
-        output_rows,
-        rows_rejected,
-        config_params
-    )
 
-    logger.info("Aplha Vantage sentiment pipeline API to bronze finished successfully")
+        all_rows: list[dict] = []
+
+        for symbol in symbols:
+            try:
+                max_date = coverage.get(symbol)
+                time_from = None if max_date is None else max_date.strftime("%Y%m%dT%H%M")
+
+                logger.info(f"{'BOOTSTRAP' if max_date is None else 'REFRESH'} for {symbol}")
+
+                raw_json = client.fetch_sentiment(
+                    ticker=symbol,
+                    time_from=time_from
+                )
+
+                if raw_json.get("_rate_limited"):
+                    logger.warning(f"Rate limit hit at {symbol} — stopping extraction")
+                    break
+
+                all_rows.extend(raw_json.get("feed", []))
+
+            except Exception as e:
+                logger.error(f"Extraction failed for {symbol}", exc_info=True)
+    
+        # ---------- parsing ----------
+        parsed_rows = list(AvJsonParser.parse(all_rows, set(symbols)))
+
+        # ---------- create df ----------
+        df = spark.createDataFrame(parsed_rows, schema=av_sentiment_bronze_schema)
+
+        # ---------- Validation ----------
+        ValidationHelper.validate_schema(
+            df,
+            required_columns=BRONZE_REQUIRED_COLUMNS,
+            context="bronze_av_sentiment")
+    
+        ValidationHelper.validate_not_empty(
+            df,
+            context="bronze_av_sentiment"
+        )
+
+        # ---------- Cleaning ----------
+        df = AVSentimentCleaner.drop_duplicates(df, ["symbol", "published_at", "title"])
+
+        input_rows = df.count()
+
+        # ---------- Write upsert ----------
+        DeltaTableWriter(
+            spark=spark,
+            table_name=bronze_av_sentiment
+        ).upsert(df, merge_keys=["symbol", "published_at", "title"])
+
+        # -------- monitoring --------
+        output_rows = df.count()
+        rows_rejected = input_rows - output_rows
+    
+        ppl_logger.finish(
+            input_rows,
+            output_rows,
+            rows_rejected,
+            config_params
+        )
+
+    except Exception as e:
+        ppl_logger.fail(str(e))
+        raise
 
 if __name__ == "__main__":
     run()
