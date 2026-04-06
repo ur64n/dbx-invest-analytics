@@ -66,7 +66,7 @@ def run():
                 .limit(50)
                 .collect()
             )
-    ]
+        ]
 
         logger.info(f"Total symbols to fetch sentiment for {len(symbols)}")
 
