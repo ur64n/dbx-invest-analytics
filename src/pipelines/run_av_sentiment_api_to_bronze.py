@@ -131,6 +131,9 @@ def run():
         # ---------- create df ----------
         df = spark.createDataFrame(parsed_rows, schema=av_sentiment_bronze_schema)
 
+        # -------- monitoring --------
+        input_rows = df.count()
+
         # ---------- Validation ----------
         ValidationHelper.validate_schema(
             df,
@@ -145,7 +148,9 @@ def run():
         # ---------- Cleaning ----------
         df = AVSentimentCleaner.drop_duplicates(df, ["symbol", "published_at", "title"])
 
-        input_rows = df.count()
+        # -------- monitoring --------
+        output_rows = df.count()
+        rows_rejected = input_rows - output_rows
 
         # ---------- Write upsert ----------
         DeltaTableWriter(
@@ -154,9 +159,6 @@ def run():
         ).upsert(df, merge_keys=["symbol", "published_at", "title"])
 
         # -------- monitoring --------
-        output_rows = df.count()
-        rows_rejected = input_rows - output_rows
-    
         ppl_logger.finish(
             input_rows,
             output_rows,
