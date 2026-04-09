@@ -2,6 +2,9 @@ from pyspark.sql import SparkSession
 from src.config.config_loader import load_config
 from src.config.logger import get_logger
 
+from src.etl.schema.fred_schema import KEY_COLUMNS
+
+from src.etl.monitoring.pipeline_run_logger import PplLogger
 from src.etl.extraction.delta_table_extractor import DeltaTableExtractor
 from src.etl.enrichment.fred_dimension_enrichment import FredDimensionEnricher
 from src.etl.validation.gold_fred_validation import GoldFredValidator
@@ -12,40 +15,70 @@ from src.etl.write.delta_table_writer import DeltaTableWriter
 logger = get_logger("gold_fred_with_dimension pipeline")
 
 def run():
-    logger.info("Starting gold_fred_with_dimension pipeline")
-    
+
     # ---------- setup ----------
     spark = SparkSession.builder.getOrCreate()
     config = load_config()
+    ppl_name = "run_gold_fred_with_dimension"
+    layer = "gold"
+    source_table = config["tables"]["silver_fred_macro_indicators"]
+    target_table = config["tables"]["gold_fred_with_dimension"]
 
-    # ---------- read data ----------
-    fact_df = DeltaTableExtractor(
-        spark=spark,
-        table_name=config["tables"]["silver_fred_macro_indicators"]
-    ).read()
+    # -------- monitoring --------
+    ppl_logger = PplLogger(spark)
+    ppl_logger.start(
+        ppl_name,
+        layer,
+        source_table,
+        target_table
+    )
 
-    dim_df = DeltaTableExtractor(
-        spark=spark,
-        table_name=config["tables"]["silver_fred_macro_indicator_metadata"]
-    ).read()
+    try:
+        # ---------- read data ----------
+        fact_df = DeltaTableExtractor(
+            spark=spark,
+            table_name=config["tables"]["silver_fred_macro_indicators"]
+        ).read()
 
-    # ---------- enrichment ----------
-    df = FredDimensionEnricher.enrich_fred_dimension(fact_df, dim_df)
+        dim_df = DeltaTableExtractor(
+            spark=spark,
+            table_name=config["tables"]["silver_fred_macro_indicator_metadata"]
+        ).read()
 
-    logger.info("Enrichment completed successfully")
+        # -------- monitoring --------
+        input_rows = fact_df.count()
 
-    # ---------- validation ----------
-    FredValidator.validate_uniqueness(df)
-    ValidationHelper.validate_row_after_join(fact_df, df)
-    GoldFredValidator.validate_nulls(df)
+        # ---------- enrichment ----------
+        df = FredDimensionEnricher.enrich_fred_dimension(fact_df, dim_df)
 
-    # ---------- write ----------
-    DeltaTableWriter(
-        table_name=config["tables"]["gold_fred_with_dimension"],
-        spark=spark
-    ).overwrite(df)
-    
-    logger.info("gold_fred_with_dimension pipeline completed successfully")
+        logger.info("Enrichment completed successfully")
+
+        # ---------- validation ----------
+        ValidationHelper.validate_uniqueness(df, KEY_COLUMNS)
+        ValidationHelper.validate_row_after_join(fact_df, df)
+        GoldFredValidator.validate_nulls(df)
+
+        # ---------- write ----------
+        DeltaTableWriter(
+            table_name=config["tables"]["gold_fred_with_dimension"],
+            spark=spark
+        ).overwrite(df)
+
+        # -------- monitoring --------
+        output_rows = df.count()
+        rows_rejected = input_rows - output_rows
+        config_params = None
+
+        ppl_logger.finish(
+            input_rows,
+            output_rows,
+            rows_rejected,
+            config_params
+        )
+
+    except Exception as e:
+        ppl_logger.fail(str(e))
+        raise
 
 if __name__ == "__main__":
     run()

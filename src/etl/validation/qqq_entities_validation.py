@@ -2,7 +2,7 @@ from pyspark.sql import DataFrame
 from pyspark.sql.functions import col, lit
 from src.config.logger import get_logger
 
-from src.etl.schema.qqq_entities_schema import not_null_columns
+from src.etl.schema.qqq_entities_schema import NOT_NULL_COLUMNS
 
 logger = get_logger("qqq_entities_validation")
 
@@ -13,17 +13,16 @@ class QQQEntitiesValidator:
     def validate_column_values(df: DataFrame) -> None:
         logger.info("Validating column values")
 
-        for c in not_null_columns:
-            empty_count = df.filter(
-                col(c).isNull() | (col(c) == lit(""))
-            ).count()
+        for c in NOT_NULL_COLUMNS:
+            null_count = df.filter(col(c).isNull()).count()
 
-            if empty_count > 0:
+            if df.schema[c].dataType == StringType():
+                null_count += df.filter(col(c) == lit("")).count()
+
+            if null_count > 0:
                 if c == "Symbol":
                     raise ValueError(f"Found empty values in critical column: {c}")
-                logger.warning(
-                    f"Found {empty_count} empty values in column: {c}"
-                )
+                logger.warning(f"Found {null_count} empty values in column: {c}")
 
     # ---------- Silver ----------
     @staticmethod

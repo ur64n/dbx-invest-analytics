@@ -6,7 +6,7 @@ fred_metadata_schema = StructType([
     StructField("frequency", StringType(), False),
 ])
 
-REQUIRED_COLUMNS = {
+METADATA_REQUIRED_COLUMNS = {
     "indicator_id",
     "unit",
     "frequency",
