@@ -10,7 +10,7 @@ QQQ_SCHEMA = StructType([
 REQUIRED_RAW_COLUMNS = {
     "Symbol",
     "Name",
-    "% Holding"
+    "percent_holding"
 }
 
 REQUIRED_SILVER_COLUMNS = {

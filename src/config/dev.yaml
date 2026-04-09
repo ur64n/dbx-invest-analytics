@@ -32,7 +32,25 @@ tables:
   gold_sentiment_vs_returns: gold.sentiment_vs_returns
   gold_sentiment_lead_lag: gold.sentiment_lead_lag
   gold_macro_impact_on_tech: gold.macro_impact_on_tech
-  
+
+# ---------- vacuum ----------
+vacuum:
+  retention_hours: 168 # 7 days
+  tables:
+    - bronze_ohlcv
+    - bronze_fred_macro_indicators
+    - bronze_av_sentiment
+    - silver_ohlcv
+    - silver_fred_macro_indicators
+    - silver_av_sentiment
+    - gold_ohlcv_with_dimension
+    - gold_fred_with_dimension
+    - gold_av_sentiment_aggregated
+    - gold_av_sentiment_sector_daily
+    - gold_sentiment_vs_returns
+    - gold_sentiment_lead_lag
+    - gold_macro_impact_on_tech
+
 # ---------- fred ----------
 fred:
   base_url: https://api.stlouisfed.org/fred

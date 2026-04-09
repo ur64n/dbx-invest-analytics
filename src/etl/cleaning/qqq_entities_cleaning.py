@@ -16,6 +16,12 @@ class QQQEntitiesCleaner:
         )
 
     @staticmethod
+    def rename_column(df: DataFrame) -> DataFrame:
+        logger.info("Change column name")
+
+        return df.withColumnRenamed("% Holding", "percent_holding")
+
+    @staticmethod
     def clean_rows(df: DataFrame, text_cols: list[str]) -> DataFrame:
         logger.info("Standardizing row values")
 

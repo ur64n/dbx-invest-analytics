@@ -1,6 +1,7 @@
 from pyspark.sql import DataFrame
 from pyspark.sql.functions import col, lit
 from src.config.logger import get_logger
+from pyspark.sql.types import StringType
 
 from src.etl.schema.qqq_entities_schema import NOT_NULL_COLUMNS
 
