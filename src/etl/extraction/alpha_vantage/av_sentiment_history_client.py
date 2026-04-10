@@ -2,15 +2,19 @@ import time
 import requests
 from typing import Optional
 from src.config.logger import get_logger
+from requests.adapters import HTTPAdapter
+from urllib3.util.retry import Retry
 
 logger = get_logger("av_sentiment_history_client")
 
 class AVSentimentHistoryClient:
-    """ 
-    Client for Alpha Vantage news sentiment history data.
-    Extracts per ticker news sentiment (score, label, relevance)
+    """Client for Alpha Vantage news sentiment historical data.
 
-    (Free tier) - 25 request/day, 5 requests/min.
+    Fetches per-ticker news sentiment (score, label, relevance)
+    sorted by earliest articles first, paginating backwards from a given date.
+    Handles API rate limiting and error responses (rate limit, error message).
+
+    Free tier: 25 requests/day, 5 requests/min.
     """
 
     def __init__(self, config: dict, api_key: str):
@@ -20,9 +24,16 @@ class AVSentimentHistoryClient:
         self.articles_per_request = config["alpha_vantage"]["articles_per_request"]
         self.time_from = config["alpha_vantage"]["time_from"]
         self.topics = "," .join(config["alpha_vantage"]["topics"])
+        
+        self.session = requests.Session()
+        retry_strategy = Retry(
+            total=3,
+            backoff_factor=2,
+            status_forcelist=[429, 500, 502, 503, 504],
+        )
+        self.session.mount("https://", HTTPAdapter(max_retries=retry_strategy))
 
     # helpers
-
     def _rate_limit(self):
         time.sleep(60.0 / self.rate_limit_per_min) # timesleep = 12 sec.
 
@@ -55,7 +66,7 @@ class AVSentimentHistoryClient:
 
         self._rate_limit()
 
-        response = requests.get(url, timeout=30)
+        response = self.session.get(url, timeout=30)
         response.raise_for_status()
 
         data = response.json()
