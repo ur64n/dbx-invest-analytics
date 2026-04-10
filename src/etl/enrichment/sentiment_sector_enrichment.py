@@ -4,6 +4,7 @@ from src.config.logger import get_logger
 logger = get_logger("sentiment_sector_enrichment")
 
 class SentimentSectorEnricher:
+    """Joins aggregated sentiment data with sector/industry dimension on symbol."""
 
     @staticmethod
     def enrich_sector_sentiment(sector_df: DataFrame, sentiment_df: DataFrame) -> DataFrame:

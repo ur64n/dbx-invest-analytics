@@ -5,6 +5,11 @@ from pyspark.sql.functions import col, count, avg, sum
 logger = get_logger("sentiment_sector_aggregation")
 
 class SentimentSectorAggregator:
+    """Aggregates daily sentiment to sector+industry level.
+
+    Uses weighted averages (by article_count) for sentiment and relevance scores.
+    Computes bullish_bearish_ratio as net sentiment direction.
+    """
     
     @staticmethod
     def aggregate_daily_sentiment_per_sector(df: DataFrame) -> DataFrame:

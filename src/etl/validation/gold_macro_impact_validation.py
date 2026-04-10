@@ -5,6 +5,7 @@ from src.config.logger import get_logger
 logger = get_logger("gold_macro_impact_validation")
 
 class GoldMacroImpactValidator:
+    """Validates macro impact table, non-null monthly returns, extreme value warnings."""
 
     @staticmethod
     def validate_domain_rules(df: DataFrame) -> None:

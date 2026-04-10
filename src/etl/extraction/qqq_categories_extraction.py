@@ -1,11 +1,16 @@
 import yfinance as yf
 from pyspark.sql import SparkSession, DataFrame
 from src.config.logger import get_logger
+from pyspark.sql.types import StructType
 
 logger = get_logger("qqq_categories_extraction")
 
 class QQQCategoriesExtractor:
+    """Fetches sector and industry metadata from yfinance for a list of symbols.
 
+    Returns a DataFrame with columns: symbol, sector, industry.
+    Symbols that fail lookup get NULL sector/industry.
+    """
     def __init__(self, spark: SparkSession):
         self.spark = spark
 

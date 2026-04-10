@@ -6,7 +6,11 @@ from pyspark.sql.functions import current_date
 logger = get_logger("fred_validation")
 
 class FredValidator:
+    """Domain-specific validation for FRED indicator data.
 
+    Checks: indicator_id not null, date not future, value >= 0 (nulls allowed).
+    """
+    
     @staticmethod
     def validate_domain_rules(df: DataFrame) -> None:
         logger.info("Validating domain rules (indicator_id, date, value)")
@@ -21,4 +25,4 @@ class FredValidator:
 
         # value >= 0 (NULL allowed)
         if df.filter(col("value") < 0).head(1):
-            raise ValueError(f"Found {negatives} negative indicator values")
+            raise ValueError("Negative indicator values found")

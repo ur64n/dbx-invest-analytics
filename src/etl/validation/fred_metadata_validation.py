@@ -5,7 +5,11 @@ from src.config.logger import get_logger
 logger = get_logger("fred_metadata_validation")
 
 class FredMetadataValidator:
+    """Validates FRED metadata canonical standards.
 
+    Ensures frequency values are in canonical set: {d, m, q, a}.
+    """
+    
     @staticmethod
     def validate_canonical_frequency(df: DataFrame) -> None:
         logger.info("Validating fred metadata frequency cannonical standard")

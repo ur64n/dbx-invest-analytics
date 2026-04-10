@@ -5,7 +5,12 @@ from src.config.logger import get_logger
 logger = get_logger("qqq_categories_validation")
 
 class QQQCategoriesValidator:
+    """Validates QQQ category data consistency.
 
+    Checks: all expected symbols present, no null symbols,
+    warns on null sector/industry (expected for non-equity entries like USD).
+    """
+    
     @staticmethod
     def validate_symbols_consistency(symbols: list, df: DataFrame) -> None:
         logger.info("Validating symbols consistency")

@@ -9,7 +9,13 @@ from src.etl.schema.ohlcv_schema import NOT_NULL_COLUMNS, PRICE_COLUMNS
 logger = get_logger("ohlcv_validation")
 
 class OHLCVValidator:
+    """Domain-specific validation for OHLCV market data.
 
+    Validates: price consistency (high >= low, open/close within range),
+    positive prices, non-negative volume, no future dates,
+    minimum records per symbol.
+    """
+    
     @staticmethod
     def validate_records_number_per_symbol(df: DataFrame) -> None:
         logger.info("Validating ohlcv records number per symbol")

@@ -4,6 +4,11 @@ from pyspark.sql import DataFrame
 logger = get_logger("DeltaTableExtractor")
 
 class DeltaTableExtractor:
+    """Reads a Delta table by name and returns a DataFrame.
+    
+    Used as the standard entrypoint for reading persisted data
+    in Bronze/Silver/Gold layers.
+    """
     def __init__(self, spark, table_name: str):
         self.spark = spark
         self.table_name = table_name

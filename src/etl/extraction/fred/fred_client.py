@@ -10,7 +10,13 @@ from src.config.logger import get_logger
 logger = get_logger("fred_extraction")
 
 class FredClient:
+    """HTTP client for the FRED API (Federal Reserve Economic Data).
 
+    Downloads time series observations as XML files to a local Volume path.
+    Also fetches series metadata (unit, frequency) as JSON.
+    Respects configurable rate limiting between requests.
+    """
+    
     def __init__(self, config: dict, api_key: str):
         self.base_url = config["fred"]["base_url"]
         self.api_key = api_key

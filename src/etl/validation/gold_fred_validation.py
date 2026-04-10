@@ -5,6 +5,7 @@ from pyspark.sql.functions import col
 logger = get_logger("gold_fred_validation")
 
 class GoldFredValidator:
+    """Validates Gold FRED table after dimension join, checks for null frequency/unit."""
 
     @staticmethod
     def validate_nulls(df: DataFrame) -> None:

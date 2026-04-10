@@ -7,6 +7,13 @@ from src.etl.schema.pipeline_logger_schema import PPL_LOGGER_SCHEMA
 logger = get_logger("pipeline_run_logger")
 
 class PplLogger:
+    """Logs pipeline execution metadata to ops.pipeline_runs Delta table.
+
+    Tracks: run_id, timing, row counts, status (SUCCESS/FAILURE),
+    source/target tables, config parameters.
+
+    Usage: call start() at pipeline begin, finish() or fail() at end.
+    """
     def __init__(self, spark: SparkSession):
         self.spark = spark
         self.schema = PPL_LOGGER_SCHEMA

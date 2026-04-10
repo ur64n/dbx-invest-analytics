@@ -7,7 +7,12 @@ from src.config.logger import get_logger
 logger = get_logger("fred_xml_parser")
 
 class FredXMLParser:
+    """Parses FRED XML observation files into dicts.
 
+    Handles FRED conventions: value='.' means missing data,
+    empty or non-numeric values become None.
+    Yields one dict per observation: {indicator_id, date, value}.
+    """
     @staticmethod
     def parse(xml_content: bytes, indicator_id: str) -> Iterable[Dict]:
 

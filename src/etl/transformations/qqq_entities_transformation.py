@@ -5,7 +5,12 @@ from src.config.logger import get_logger
 logger = get_logger("qqq_entities_transformation")
 
 class QQQEntitiesTransformer:
+    """Transforms raw QQQ CSV columns to Silver standard.
 
+    Renames columns to snake_case, drops unused columns (Shares),
+    casts percent_holding from string '5.23%' to decimal.
+    """
+    
     @staticmethod
     def transform_raw(df: DataFrame) -> DataFrame:
         logger.info("Transforming raw QQQ CSV")

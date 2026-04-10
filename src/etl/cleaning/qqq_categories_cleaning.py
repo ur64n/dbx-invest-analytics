@@ -6,6 +6,7 @@ from pyspark.sql.functions import col, trim, lower
 logger = get_logger("qqq_categories_cleaning")
 
 class QQQCategoriesCleaner:
+    """Standardizes QQQ category strings to lowercase and trimmed."""
 
     @staticmethod
     def standardize_strings(df: DataFrame) -> DataFrame:

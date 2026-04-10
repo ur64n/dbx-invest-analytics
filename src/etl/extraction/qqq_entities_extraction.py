@@ -6,6 +6,11 @@ from src.etl.extraction.file_utils import list_files, normalize_filename
 logger = get_logger("qqq_csv_extraction")
 
 class QQQEntitiesExtractor:
+    """Reads the raw QQQ ETF constituents CSV from a Volume path.
+
+    Handles filename normalization (date suffix removal)
+    and validates that the expected file exists before reading.
+    """
 
     def __init__(
         self, 

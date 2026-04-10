@@ -8,7 +8,12 @@ from src.etl.schema.qqq_entities_schema import NOT_NULL_COLUMNS
 logger = get_logger("qqq_entities_validation")
 
 class QQQEntitiesValidator:
+    """Validates QQQ ETF entity data quality.
 
+    Checks null values in critical columns, holding percentage range (0-100),
+    and warns on null holdings.
+    """
+    
     # ---------- Bronze ----------
     @staticmethod
     def validate_column_values(df: DataFrame) -> None:

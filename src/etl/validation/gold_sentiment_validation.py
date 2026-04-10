@@ -6,6 +6,7 @@ from pyspark.sql.functions import col
 logger = get_logger("gold_sentiment_validation")
 
 class GoldAVSentimentValidator:
+    """Validates Gold aggregated sentiment, article counts, score ranges, non-negative label counts."""
 
     @staticmethod
     def validate_domain_rules(df: DataFrame) -> None:

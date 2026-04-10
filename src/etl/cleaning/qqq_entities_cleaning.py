@@ -5,7 +5,13 @@ from src.config.logger import get_logger
 logger = get_logger("qqq_entities_cleaning")
 
 class QQQEntitiesCleaner:
+    """Cleans raw QQQ ETF constituent data.
 
+    Removes invalid rows (QQQ header rows, download artifacts),
+    renames '% Holding' to 'percent_holding',
+    standardizes text columns (lowercase, trim, collapse whitespace).
+    """
+    
     @staticmethod
     def remove_invalid_rows(df: DataFrame) -> DataFrame:
         logger.info("Start cleaning rows in qqq_entities")

@@ -5,6 +5,7 @@ from src.config.logger import get_logger
 logger = get_logger("gold_sentiment_lead_lag_validation")
 
 class GoldSentimentLeadLagValidator:
+    """Validates sentiment lead/lag, non-null forward returns, score ranges, extreme value warnings."""
 
     @staticmethod
     def validate_domain_rules(df: DataFrame) -> None:

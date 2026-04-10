@@ -11,7 +11,11 @@ from src.config.logger import get_logger
 logger = get_logger("fred_run_metadata")
 
 class FredRunMetadataWriter:
+    """Logs extraction run metadata (success/failure) to a Delta audit table.
 
+    Creates the table on first use if it doesn't exist.
+    Each extraction attempt per series_id gets one row with status and timestamp.
+    """
     def __init__(self, spark: SparkSession):
         self.spark = spark
         self.table_name = "bronze.fred_run_metadata"

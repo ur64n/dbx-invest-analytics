@@ -4,6 +4,7 @@ from src.config.logger import get_logger
 logger = get_logger("ohlcv_dimension_enrichment")
 
 class OHLCVDimensionEnricher:
+    """Joins OHLCV data with QQQ entities (name, holding) and categories (sector, industry)."""
 
     @staticmethod
     def enrich_ohlcv_dimension(ohlcv_df: DataFrame, qqq_ent_df: DataFrame, qqq_cat_df: DataFrame) -> DataFrame:

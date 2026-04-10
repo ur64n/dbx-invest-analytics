@@ -11,7 +11,12 @@ from src.config.logger import get_logger
 logger = get_logger("fred_metadata_cleaning")
 
 class FredMetadataCleaner:
+    """Cleans FRED metadata: lowercase, trim, empty-to-null, canonical frequency.
 
+    Frequency mapping: daily->d, monthly->m, quarterly->q, annual->a.
+    Unknown frequencies pass through unchanged.
+    """
+    
     @staticmethod
     def clean_metadata(df: DataFrame) -> DataFrame:
         logger.info("Cleaning FRED metadata")

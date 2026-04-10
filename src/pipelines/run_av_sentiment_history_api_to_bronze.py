@@ -80,7 +80,7 @@ def run():
         }
 
         # ---------- sort list ----------
-        cutoff = datetime(2015, 6, 1)
+        cutoff = datetime(2015, 12, 1)
         symbols = [s for s in symbols if s in coverage and coverage[s] > cutoff]
 
         # -------- monitoring --------

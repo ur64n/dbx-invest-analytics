@@ -40,7 +40,10 @@ def run():
             input_rows=0,
             output_rows=0,
             rows_rejected=0,
-            config_params=len(table_keys)
+            config_params=json.dumps({
+                "tables_vacuumed": len(table_keys),
+                "retention_hours": retention_hours
+            })
         )
 
     except Exception as e:

@@ -4,6 +4,10 @@ from src.config.logger import get_logger
 logger = get_logger("delta_vacuum")
 
 class DeltaVacuum:
+    """Runs Delta VACUUM on a table to remove old data files.
+
+    Skips if table doesn't exist. Uses configurable retention period in hours.
+    """
 
     @staticmethod
     def vacuum_table(spark: SparkSession, table_name: str, retention_hours: int) -> None:

@@ -4,7 +4,12 @@ from src.config.logger import get_logger
 logger = get_logger("validation_helper")
 
 class ValidationHelper:
+    """Generic DataFrame validation utilities used across all pipelines.
 
+    All methods raise ValueError on failure.
+    Designed to be stateless, call as static methods.
+    """
+    
     @staticmethod
     def validate_schema(df: DataFrame, required_columns: set, context: str = ""):
         logger.info("Starting validation of required columns")

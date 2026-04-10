@@ -5,7 +5,16 @@ from src.config.logger import get_logger
 logger = get_logger("yahoo_ohlcv_extraction")
 
 def download_ohlcv(spark, symbols: list, start_date: str, end_date: str):
+    """Downloads daily OHLCV data from yfinance for given symbols and date range.
 
+    Returns a pandas DataFrame with columns:
+    date, symbol, open, high, low, close, adj_close, volume.
+
+    Skips symbols with no data available.
+    Validates column schema contract against expected_cols.
+    Raises ValueError if no data downloaded for any symbol.
+    """
+    
     logger.info("Start downloading OHLCV data")
 
     all_data = []

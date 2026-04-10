@@ -2,6 +2,7 @@ from pyspark.sql import DataFrame
 from pyspark.sql.functions import col, lower, trim
 
 class OHLCVTransformer:
+    """Casts OHLCV column types and normalizes symbol to lowercase."""
 
     @staticmethod
     def cast_column_types(df: DataFrame) -> DataFrame:

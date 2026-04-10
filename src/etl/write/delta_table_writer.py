@@ -5,6 +5,14 @@ from delta.tables import DeltaTable
 logger = get_logger("delta_table_writer")
 
 class DeltaTableWriter:
+    """Writes DataFrames to Delta tables with multiple persistence strategies.
+
+    - overwrite: full table replacement.
+    - overwrite_schema: full replacement with schema evolution.
+    - append: adds rows without deduplication.
+    - upsert: MERGE on merge_keys - updates existing, inserts new rows.
+      Creates the table on first run if it doesn't exist.
+    """
     def __init__(self, table_name:str, spark):
         self.table_name = table_name
         self.spark = spark

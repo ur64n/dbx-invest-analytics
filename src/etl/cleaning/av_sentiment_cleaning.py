@@ -10,7 +10,12 @@ from src.config.logger import get_logger
 logger = get_logger("av_sentiment_cleaning")
 
 class AVSentimentCleaner:
+    """Cleans Alpha Vantage sentiment data.
 
+    - drop_duplicates: removes duplicate rows on given key columns.
+    - standardize_columns: lowercase/trim text columns, extract date from published_at.
+    """
+    
     @staticmethod
     def drop_duplicates(df: DataFrame, keys: list[str]) -> DataFrame:
         logger.info(f"Starting drop duplicates on keys columns")

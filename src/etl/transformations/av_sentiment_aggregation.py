@@ -5,12 +5,17 @@ from pyspark.sql.functions import col, count, avg, sum, when, lit
 logger = get_logger("av_sentiment_aggregation")
 
 class AVSentimentAggregator:
+    """Aggregates per-article sentiment data to daily granularity per symbol.
 
+    Produces: article_count, avg scores, and sentiment label distribution
+    (bullish/neutral/bearish counts).
+    """
+    
     @staticmethod
     def aggregate_daily(df: DataFrame) -> DataFrame:
         logger.info("Starting aggregation daily sentiment per symbol: counts articles, averages scores, and computes sentiment label distribution")
 
-        return df.groupBy("symbol","date").agg(
+        result = df.groupBy("symbol","date").agg(
                 count("*").alias("article_count"),
                 avg("ticker_sentiment_score").alias("avg_sentiment_score"),
                 avg("ticker_relevance_score").alias("avg_relevance_score"),
@@ -23,3 +28,5 @@ class AVSentimentAggregator:
             )
         
         logger.info("Finished aggregation: daily sentiment per symbol and date")
+
+        return result

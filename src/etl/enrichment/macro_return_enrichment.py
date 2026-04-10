@@ -4,6 +4,7 @@ from src.config.logger import get_logger
 logger = get_logger("macro_return_enrichment")
 
 class MacroReturnEnricher:
+    """Joins QQQ monthly returns with monthly macro indicators on year_month."""
 
     @staticmethod
     def enrich(monthly_return_df: DataFrame, macro_monthly_df: DataFrame) -> DataFrame:

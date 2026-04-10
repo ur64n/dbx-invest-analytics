@@ -6,7 +6,12 @@ from src.config.logger import get_logger
 logger = get_logger("av_json_parser")
 
 class AvJsonParser:
+    """Parses Alpha Vantage news sentiment JSON feed into flat dicts.
 
+    Filters articles to only include tickers present in valid_symbols.
+    Yields one dict per (article, ticker) pair with sentiment scores.
+    """
+    
     @staticmethod
     def parse(feed: list[dict], valid_symbols: set) -> Iterable[dict]:
         logger.info("Parsing AV sentiment feed")

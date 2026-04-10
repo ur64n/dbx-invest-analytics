@@ -11,6 +11,7 @@ from src.config.logger import get_logger
 logger = get_logger("fred_cleaning")
 
 class FredCleaner:
+    """Standardizes FRED indicator data: lowercase indicator_id, cast types."""
 
     @staticmethod
     def standardize_columns(df: DataFrame) -> DataFrame:

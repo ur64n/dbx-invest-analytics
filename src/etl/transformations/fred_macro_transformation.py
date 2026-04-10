@@ -7,7 +7,11 @@ from src.etl.schema.macro_impact_schema import AVG_IND_COLUMNS
 logger = get_logger("fred_macro_transformation")
 
 class FredMacroTransformer:
+    """Calculates monthly return as (last_close - first_close) / first_close.
 
+    Groups by year_month derived from date column.
+    """
+    
     @staticmethod
     def pivot(df: DataFrame) -> DataFrame:
         logger.info("Starting pivot transformation on fred_macro_indicators dataset")

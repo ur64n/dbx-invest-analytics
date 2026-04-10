@@ -6,7 +6,14 @@ from src.config.logger import get_logger
 logger = get_logger("ohlcv_return_calculation")
 
 class OHLCVCalculator:
+    """Calculates return metrics from OHLCV price data.
 
+    - calculate_daily_return: day-over-day % change using lag(close).
+    - calculate_forward_returns: T+1, T+2, T+5 forward returns using lead(close).
+
+    Both methods operate within a Window partitioned by symbol, ordered by date.
+    """
+    
     @staticmethod
     def calculate_daily_return(df: DataFrame) -> DataFrame:
         logger.info("Starting daily return per symbol calculation")

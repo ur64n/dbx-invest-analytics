@@ -8,7 +8,13 @@ from src.etl.schema.av_schema import ALLOWED_VALUES
 logger = get_logger("av_sentiment_validation")
 
 class AVValidator:
+    """Domain-specific validation for Alpha Vantage sentiment data.
 
+    Validates: symbol not null, dates not future,
+    score ranges (-1 to 1 for sentiment, 0 to 1 for relevance),
+    score-label consistency, allowed label values.
+    """
+    
     # ---------- silver validation ----------
     @staticmethod
     def validate_symbol_not_null(df: DataFrame) -> None:
