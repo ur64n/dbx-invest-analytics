@@ -78,7 +78,7 @@ Pipelines: latest sentiment API → Bronze (upsert), historical backfill API →
 
 ---
 
-## Pipeline Inventory
+## Pipelines order
 
 ### Bronze Pipelines (API/File → Bronze)
 
@@ -164,6 +164,100 @@ Pipelines have hard dependencies. The correct execution order is:
 **Maintenance (run after all pipelines)**
 
 19. `run_vacuum`
+
+---
+
+## Pipeline DAG
+
+```mermaid
+flowchart TD
+    subgraph phase1["Faza 1 — Bronze (niezależne)"]
+        QQQ_CSV["run_qqq_entities_raw_to_bronze<br/><i>CSV → bronze.qqq_etf_constituents</i>"]
+        FRED_API["run_fred_api_to_bronze<br/><i>FRED API → bronze.fred_macro_indicators</i>"]
+    end
+
+    subgraph phase2["Faza 2 — Silver QQQ + FRED + Categories Bronze"]
+        QQQ_SILVER["run_qqq_entities_bronze_to_silver<br/><i>→ silver.qqq_entities</i>"]
+        FRED_SILVER["run_fred_bronze_to_silver<br/><i>→ silver.fred_macro_indicators</i>"]
+        CAT_BRONZE["run_qqq_categories_api_to_bronze<br/><i>yfinance → bronze.qqq_etf_categories</i>"]
+    end
+
+    subgraph phase3["Faza 3 — Silver Categories + OHLCV"]
+        CAT_SILVER["run_qqq_categories_bronze_to_silver<br/><i>→ silver.qqq_etf_categories</i>"]
+        OHLCV_BRONZE["run_ohlcv_api_to_bronze<br/><i>yfinance → bronze.ohlcv_indicators</i>"]
+        OHLCV_SILVER["run_ohlcv_bronze_to_silver<br/><i>→ silver.ohlcv_indicators</i>"]
+    end
+
+    subgraph phase4["Faza 4 — Gold OHLCV + Sentiment Bronze"]
+        GOLD_OHLCV["run_gold_ohlcv_with_dimension<br/><i>→ gold.ohlcv_with_dimension</i>"]
+        AV_BRONZE["run_av_sentiment_api_to_bronze<br/><i>Alpha Vantage → bronze.av_sentiment</i>"]
+        AV_HISTORY["run_av_sentiment_history_api_to_bronze<br/><i>backfill → bronze.av_sentiment</i>"]
+    end
+
+    subgraph phase5["Faza 5 — Sentiment Silver + Gold"]
+        AV_SILVER["run_av_sentiment_bronze_to_silver<br/><i>→ silver.av_sentiment</i>"]
+        GOLD_FRED["run_gold_fred_with_dimension<br/><i>→ gold.fred_with_dimension</i>"]
+        GOLD_SENT_AGG["run_gold_sentiment_daily_agg<br/><i>→ gold.av_sentiment_aggregated</i>"]
+    end
+
+    subgraph phase6["Faza 6 — Końcowe Gold"]
+        GOLD_VS_RET["run_gold_sentiment_vs_returns<br/><i>→ gold.sentiment_vs_returns</i>"]
+        GOLD_LEAD_LAG["run_gold_sentiment_lead_lag<br/><i>→ gold.sentiment_lead_lag</i>"]
+        GOLD_SECTOR["run_gold_daily_sentiment_per_sector<br/><i>→ gold.av_sentiment_sector_daily</i>"]
+        GOLD_MACRO["run_gold_macro_impact_on_tech<br/><i>→ gold.macro_impact_on_tech</i>"]
+    end
+
+    subgraph maintenance["Utrzymanie"]
+        VACUUM["run_vacuum<br/><i>VACUUM 7-day retention</i>"]
+    end
+
+    %% Phase 1 → Phase 2
+    QQQ_CSV --> QQQ_SILVER
+    QQQ_CSV --> CAT_BRONZE
+    FRED_API --> FRED_SILVER
+
+    %% Phase 2 → Phase 3
+    CAT_BRONZE --> CAT_SILVER
+    QQQ_SILVER --> OHLCV_BRONZE
+    OHLCV_BRONZE --> OHLCV_SILVER
+
+    %% Phase 3 → Phase 4
+    OHLCV_SILVER --> GOLD_OHLCV
+    QQQ_SILVER -.-> GOLD_OHLCV
+    CAT_SILVER -.-> GOLD_OHLCV
+    GOLD_OHLCV --> AV_BRONZE
+    GOLD_OHLCV --> AV_HISTORY
+
+    %% Phase 4 → Phase 5
+    AV_BRONZE --> AV_SILVER
+    AV_HISTORY --> AV_SILVER
+    FRED_SILVER -.-> GOLD_FRED
+    AV_SILVER --> GOLD_SENT_AGG
+
+    %% Phase 5 → Phase 6
+    GOLD_SENT_AGG --> GOLD_VS_RET
+    GOLD_SENT_AGG --> GOLD_LEAD_LAG
+    GOLD_SENT_AGG --> GOLD_SECTOR
+    OHLCV_SILVER -.-> GOLD_VS_RET
+    OHLCV_SILVER -.-> GOLD_LEAD_LAG
+    CAT_SILVER -.-> GOLD_SECTOR
+    GOLD_FRED -.-> GOLD_MACRO
+    OHLCV_SILVER -.-> GOLD_MACRO
+
+    %% Maintenance
+    phase6 --> VACUUM
+
+    %% Styling
+    classDef bronze fill:#FAECE7,stroke:#993C1D,color:#4A1B0C
+    classDef silver fill:#E1F5EE,stroke:#0F6E56,color:#04342C
+    classDef gold fill:#EEEDFE,stroke:#534AB7,color:#26215C
+    classDef maint fill:#F1EFE8,stroke:#5F5E5A,color:#2C2C2A
+
+    class QQQ_CSV,FRED_API,CAT_BRONZE,OHLCV_BRONZE,AV_BRONZE,AV_HISTORY bronze
+    class QQQ_SILVER,FRED_SILVER,CAT_SILVER,OHLCV_SILVER,AV_SILVER silver
+    class GOLD_OHLCV,GOLD_FRED,GOLD_SENT_AGG,GOLD_VS_RET,GOLD_LEAD_LAG,GOLD_SECTOR,GOLD_MACRO gold
+    class VACUUM maint
+```
 
 ---
 
