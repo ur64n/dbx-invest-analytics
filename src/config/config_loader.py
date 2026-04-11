@@ -1,11 +1,14 @@
 import yaml
-from .config import settings_path
+from pathlib import Path
 
-# Otwiera plik yaml
-def load_config():
-    with open(settings_path, "r") as file:
-        return yaml.safe_load(file)
+def load_config(env: str = "dev") -> dict: 
 
-if __name__ == "__main__":
-    config = load_config()
-    print(config)
+    """Loads environment-specific YAML config from the config directory.
+
+    Defaults to 'dev' environment. For other environments, pass 'test' or 'prod'.
+    Returns a dict with paths, table names, API parameters, etc.
+    """
+
+    config_path = Path(__file__).parent / f"{env}.yaml" 
+    with open(config_path, "r") as f:
+        return yaml.safe_load(f)

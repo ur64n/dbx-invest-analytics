@@ -1,16 +1,20 @@
 import logging
 
 def get_logger(name: str = __name__) -> logging.Logger:
+    """Returns a configured logger with console output.
+
+    Format: timestamp | level | name | message.
+    Suppresses noisy py4j/pyspark logs.
+    Safe to call multiple times - won't duplicate handlers.
+    """
 
     logger = logging.getLogger(name)
 
-    # zapobiega dodaniu wielu handlerów przy kolejnym imporcie
     if logger.handlers:
         return logger
 
     logger.setLevel(logging.INFO)
 
-    # handler wypisujący na konsolę
     console_handler = logging.StreamHandler()
     console_handler.setLevel(logging.INFO)
 
@@ -22,7 +26,6 @@ def get_logger(name: str = __name__) -> logging.Logger:
     console_handler.setFormatter(formatter)
     logger.addHandler(console_handler)
 
-    # opcjonalnie wyciszamy nadmiarowe logi bibliotek (np. Spark)
     logging.getLogger("py4j").setLevel(logging.ERROR)
     logging.getLogger("pyspark").setLevel(logging.ERROR)
 

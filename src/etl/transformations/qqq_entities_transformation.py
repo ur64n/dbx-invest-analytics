@@ -1,44 +1,32 @@
-import os
-from src.config.config import (
-    raw_csv_filespath,
-    raw_qqq_entities_filename,
-    delta_qqq_filepath
-)
+from pyspark.sql import DataFrame
+from pyspark.sql.functions import col, regexp_replace
 from src.config.logger import get_logger
-from src.etl.validation.qqq_entities_validation import validation
-from src.config.config_loader import load_config
-from src.etl.schema.qqq_schema import qqq_schema
 
-logger = get_logger("transformation")
+logger = get_logger("qqq_entities_transformation")
 
-class transformation:
+class QQQEntitiesTransformer:
+    """Transforms raw QQQ CSV columns to Silver standard.
 
-    def __init__(self, spark, raw_df):
-        self.spark = spark
-        self.raw_df = raw_df
-        self.validator = validation(load_config(), logger, self.spark)
+    Renames columns to snake_case, drops unused columns (Shares),
+    casts percent_holding from string '5.23%' to decimal.
+    """
+    
+    @staticmethod
+    def transform_raw(df: DataFrame) -> DataFrame:
+        logger.info("Transforming raw QQQ CSV")
 
-    def csv_to_delta(self):
-        
-        self.validator.validate_raw_csv_files_exist()
-        self.validator.validate_raw_csv_schema(self.raw_df)
-        self.validator.validate_raw_csv_non_empty(self.raw_df)
+        df = (
+            df
+            .withColumnRenamed("Symbol", "symbol")
+            .withColumnRenamed("Name", "name")
+            .withColumnRenamed("% Holding", "percent_holding")
+            .drop("Shares")
+        )
 
-        logger.info("Starting transformation file csv to delta format")
+        df = df.withColumn(
+            "percent_holding",
+            regexp_replace(col("percent_holding"), "%", "")
+            .cast("decimal(5,2)")
+        )
 
-        df = self.raw_df.withColumnRenamed("% Holding", "precent_holding")
-        df = df.drop("Shares")
-        self.validator.validate_qqq_col_values(df)
-        self.validator.validate_id_uniqueness(df)
-        df.write.format("delta").option("overwriteSchema", "true").mode("overwrite").saveAsTable(delta_qqq_filepath)
-
-        logger.info("Transformation successfully, delta file saved in bronze layer")
-
-        self.validator.validate_delta_table_exist(self.spark, delta_qqq_filepath)
-
-if __name__ == "__main__":
-
-    path = os.path.join(raw_csv_filespath, raw_qqq_entities_filename)
-    raw_df = spark.read.schema(qqq_schema).option("header", True).csv(path)
-    run = transformation(spark, raw_df)
-    df = run.csv_to_delta()
+        return df
