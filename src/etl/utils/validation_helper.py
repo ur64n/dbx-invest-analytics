@@ -1,32 +1,49 @@
-import os
-import re
-from src.config.config import raw_csv_files_path
+from pyspark.sql import DataFrame
 from src.config.logger import get_logger
 
 logger = get_logger("validation_helper")
 
-def raw_csv_file_list():
-    # Pobiera listę plików z katalogu Volumes
-    return [
-        f for f in os.listdir(raw_csv_files_path)
-        if os.path.isfile(os.path.join(raw_csv_files_path, f))
-    ]
+class ValidationHelper:
+    """Generic DataFrame validation utilities used across all pipelines.
 
-def normalize_filename(filename:str) -> str:
-
-    logger.info(f"qqq_etf_entities filename normalization started for: {filename}")
-
-    new_name = re.sub(r"[-_ ]?\d{2}[-\.]\d{2}[-\.]\d{4}", "", filename)
-
-    old_path = os.path.join(raw_csv_files_path, filename)
-    new_path = os.path.join(raw_csv_files_path, new_name)
-
-    os.rename(old_path, new_path)
+    All methods raise ValueError on failure.
+    Designed to be stateless, call as static methods.
+    """
     
-    logger.info(f"qqq_etf_entities filename normalization finished, new filename: {new_name}")
+    @staticmethod
+    def validate_schema(df: DataFrame, required_columns: set, context: str = ""):
+        logger.info("Starting validation of required columns")
 
-    return new_name
+        missing = required_columns - set(df.columns)
+        if missing:
+            raise ValueError(f"Missing columns: {missing} in {context} dataset")
 
-# if __name__ == "__main__":
-#     new_name = normalize_filename(raw_csv_file_name)
-#     print(new_name)
+        logger.info("All required columns available in dataset")
+    
+    @staticmethod
+    def validate_not_empty(df: DataFrame, context: str = ""):
+        logger.info("Starting dataset emptiness validation")
+
+        if df.limit(1).count() == 0:
+            raise ValueError(f"Dataset {context} is empty")
+
+        logger.info("Dataset contains rows")
+
+    @staticmethod
+    def validate_uniqueness(df: DataFrame, key_columns: list[str]) -> None:
+        logger.info("Staring validation key columns uniqueness")
+
+        total = df.count()
+        distinct = df.select(*key_columns).distinct().count()
+
+        if total != distinct:
+            raise ValueError(f"Duplicates in dataset on key columns: {total - distinct}")
+
+    @staticmethod
+    def validate_row_after_join(source_df: DataFrame, enriched_df: DataFrame) -> None:
+        logger.info("Comparing datasets total rows, before and after join")
+        
+        if source_df.count() != enriched_df.count():
+            raise ValueError("Number of rows after join is different than before")
+
+            

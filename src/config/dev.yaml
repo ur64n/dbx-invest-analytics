@@ -1,0 +1,87 @@
+# ---------- environment ----------
+env: dev # Jawne srodowisko
+
+# ---------- raw file paths ----------
+paths:
+  raw_csv: /Volumes/workspace/bronze/raw/           
+  raw_macro: /Volumes/workspace/bronze/raw/macro/
+
+# ---------- filenames ----------
+files:
+  qqq_entities: qqq-etf-constituents.csv
+
+# ---------- tables ----------
+tables:
+  ops_pipeline_runs: ops.pipeline_runs
+  bronze_qqq: bronze.qqq_etf_constituents
+  bronze_qqq_categories: bronze.qqq_etf_categories
+  bronze_fred_macro_indicators: bronze.fred_macro_indicators
+  bronze_fred_macro_indicator_metadata: bronze.fred_macro_metadata_indicators
+  bronze_ohlcv: bronze.ohlcv_indicators
+  bronze_av_sentiment: bronze.av_sentiment
+  silver_qqq: silver.qqq_entities
+  silver_qqq_categoties: silver.qqq_etf_categories
+  silver_fred_macro_indicators: silver.fred_macro_indicators
+  silver_fred_macro_indicator_metadata: silver.fred_macro_metadata_indicators
+  silver_ohlcv: silver.ohlcv_indicators
+  silver_av_sentiment: silver.av_sentiment
+  gold_ohlcv_with_dimension: gold.ohlcv_with_dimension
+  gold_fred_with_dimension: gold.fred_with_dimension
+  gold_av_sentiment_aggregated: gold.av_sentiment_aggregated
+  gold_av_sentiment_sector_daily: gold.av_sentiment_sector_daily
+  gold_sentiment_vs_returns: gold.sentiment_vs_returns
+  gold_sentiment_lead_lag: gold.sentiment_lead_lag
+  gold_macro_impact_on_tech: gold.macro_impact_on_tech
+
+# ---------- vacuum ----------
+vacuum:
+  retention_hours: 168 # 7 days
+  tables:
+    - bronze_ohlcv
+    - bronze_fred_macro_indicators
+    - bronze_av_sentiment
+    - silver_ohlcv
+    - silver_fred_macro_indicators
+    - silver_av_sentiment
+    - gold_ohlcv_with_dimension
+    - gold_fred_with_dimension
+    - gold_av_sentiment_aggregated
+    - gold_av_sentiment_sector_daily
+    - gold_sentiment_vs_returns
+    - gold_sentiment_lead_lag
+    - gold_macro_impact_on_tech
+
+# ---------- fred ----------
+fred:
+  base_url: https://api.stlouisfed.org/fred
+  series_ids:
+    - CPIAUCSL
+    - CPILFESL
+    - FEDFUNDS
+    - DGS10
+    - DGS2
+    - UNRATE
+    - INDPRO
+    - T10YIE
+  rate_limit_per_second: 2
+  window_refresh_months: 12
+  
+# ---------- yfinance ----------
+yfinance:
+  start_date: 2010-01-01
+  window_refresh_months: 12
+  benchmark_symbols:
+    - ^VIX
+    - QQQ
+    - SPY
+    - TLT
+    - GLD
+
+# ---------- alpha_vantage ----------
+alpha_vantage:
+  base_url: https://www.alphavantage.co/query
+  rate_limit_per_min: 5
+  articles_per_request: 1000
+  time_from: "20150101T0000"
+  topics:
+    - technology
