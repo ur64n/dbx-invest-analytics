@@ -26,13 +26,13 @@ class QQQCategoriesExtractor:
                 info = yf.Ticker(symbol).info
                 rows.append(
                     (
-                        symbol.lower(),
+                        symbol,
                         info.get("sector"),
                         info.get("industry"),
                     )
                 )
             except Exception:
-                rows.append((symbol.lower(), None, None))
+                rows.append((symbol, None, None))
 
         category_df = self.spark.createDataFrame(rows, schema)
 

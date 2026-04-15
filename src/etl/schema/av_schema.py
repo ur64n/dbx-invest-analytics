@@ -9,7 +9,7 @@ from pyspark.sql.types import (
 )
 
 # ---------- bronze (per-article, per-ticker grain) ----------
-
+#TODO: change constants to upper
 av_sentiment_bronze_schema = StructType([
     StructField("symbol", StringType(), False),
     StructField("published_at", TimestampType(), False),

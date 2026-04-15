@@ -2,6 +2,8 @@ from pyspark.sql import SparkSession
 from src.config.config_loader import load_config
 from src.config.logger import get_logger
 
+import json
+
 from src.etl.monitoring.pipeline_run_logger import PplLogger
 from src.etl.retention.delta_vacuum import DeltaVacuum
 
