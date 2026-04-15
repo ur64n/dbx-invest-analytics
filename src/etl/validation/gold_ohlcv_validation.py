@@ -5,10 +5,11 @@ from src.config.logger import get_logger
 logger = get_logger("gold_ohlcv_validation")
 
 class GoldOHLCVValidator:
-
-    @staticmethod
-    """Validates Gold OHLCV table, QQQ entities have dimensions, benchmarks don't."""
+    """
+    Validates Gold OHLCV table, QQQ entities have dimensions, benchmarks don't.
+    """
     
+    @staticmethod
     def validate_qqq_null_values(df: DataFrame) -> None:
         logger.info("Validating null values in qqq entities dimensions columns")
 
